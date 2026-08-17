@@ -1,4 +1,4 @@
-if table.find({'Solara', 'Xeno'}, ({identifyexecutor()})[1]) then return false end
+if table.find({'Solara', 'Xeno'}, ({identifyexecutor()})[1]) then warn('[catsixextra] executor gate removed') end
 local run = function(func) func() end
 local cloneref = cloneref or function(obj) return obj end
 
