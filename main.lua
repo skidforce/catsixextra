@@ -159,13 +159,11 @@ if shared.maincat then
 end
 
 if not shared.VapeIndependent then
-	if isfile('catsixextra/games/_loader.lua') then
-		loadstring(readfile('catsixextra/games/_loader.lua'), 'loader')(license)
+	loadstring(downloadFile('catsixextra/games/universal.lua'), 'universal')(license)
+	if isfile('catsixextra/games/'..game.PlaceId..'.lua') then
+		loadstring(readfile('catsixextra/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(license)
 	else
-		loadstring(downloadFile('catsixextra/games/universal.lua'), 'universal')(license)
-		if isfile('catsixextra/games/'..game.PlaceId..'.lua') then
-			loadstring(readfile('catsixextra/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(license)
-		end
+		warn('[catsixextra] no script for place '..game.PlaceId)
 	end
 	loadstring(downloadFile('catsixextra/libraries/premium.lua'), 'premium')(license)
 	finishLoading()

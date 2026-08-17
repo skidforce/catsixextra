@@ -1,6 +1,0 @@
-run(function()
-	local kills = sessioninfo:AddItem('Kills')
-	local eggs = sessioninfo:AddItem('Eggs')
-	local wins = sessioninfo:AddItem('Wins')
-	local games = sessioninfo:AddItem('Games')
-end)
