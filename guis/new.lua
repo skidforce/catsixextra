@@ -36,6 +36,7 @@ local guiService = cloneref(game:GetService('GuiService'))
 local runService = cloneref(game:GetService('RunService'))
 local httpService = cloneref(game:GetService('HttpService'))
 
+local customFonts = false
 local fontsize = Instance.new('GetTextBoundsParams')
 fontsize.Width = math.huge
 local notifications
@@ -591,7 +592,7 @@ do
 		return getcustomasset('catsixextra/assets/new/proxima.json')
 	end)
 
-	if suc and family and family ~= '' then
+	if customFonts and suc and family and family ~= '' then
 		uipallet.Font = Font.new(family, Enum.FontWeight.Regular)
 	end
 end
@@ -601,10 +602,12 @@ do
 	if res then
 		uipallet.Main = res.Main and Color3.fromRGB(unpack(res.Main)) or uipallet.Main
 		uipallet.Text = res.Text and Color3.fromRGB(unpack(res.Text)) or uipallet.Text
-		uipallet.Font = res.Font and Font.new(
-			res.Font:find('rbxasset') and res.Font
-			or string.format('rbxasset://fonts/families/%s.json', res.Font)
-		) or uipallet.Font
+		if customFonts then
+			uipallet.Font = res.Font and Font.new(
+				res.Font:find('rbxasset') and res.Font
+				or string.format('rbxasset://fonts/families/%s.json', res.Font)
+			) or uipallet.Font
+		end
 	end
 	uipallet.FontSemiBold = Font.new(uipallet.Font.Family, Enum.FontWeight.SemiBold)
 	uipallet.FontBold = Font.new(uipallet.Font.Family, Enum.FontWeight.Bold)
