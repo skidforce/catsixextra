@@ -546,7 +546,7 @@ do
 		return getcustomasset('catsixextra/assets/new/proxima.json')
 	end)
 
-	if suc and family and family ~= '' then
+	if false then
 		uipallet.Font = Font.new(family, Enum.FontWeight.Regular)
 	end
 end
