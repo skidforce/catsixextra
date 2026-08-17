@@ -11,14 +11,14 @@ run(function()
 				label.Position = UDim2.new(0.5, 6, 0.5, 30)
 				label.AnchorPoint = Vector2.new(0.5, 0)
 				label.BackgroundTransparency = 1
-				label.Text = '100 â¤ï¸'
+				label.Text = '100 ❤️'
 				label.TextSize = 18
 				label.Font = Enum.Font.Arial
 				label.Parent = vape.gui
 				Health:Clean(label)
 				
 				repeat
-					label.Text = entitylib.isAlive and math.round(entitylib.character.Humanoid.Health)..' â¤ï¸' or ''
+					label.Text = entitylib.isAlive and math.round(entitylib.character.Humanoid.Health)..' ❤️' or ''
 					label.TextColor3 = entitylib.isAlive and Color3.fromHSV((entitylib.character.Humanoid.Health / entitylib.character.Humanoid.MaxHealth) / 2.8, 0.86, 1) or Color3.new()
 					task.wait()
 				until not Health.Enabled

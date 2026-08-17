@@ -109,14 +109,14 @@ run(function()
 			local ent = entitylib.getEntity(plr)
 			if ent then
 				if CheatFlags.Flagged[plr.UserId] then
-					table.insert(plrtag, {text = rich and 'â ï¸' or 'Cheater'})
+					table.insert(plrtag, {text = rich and '⚠️' or 'Cheater'})
 				end
 
 				if plr.Team == teams.Inmates then
 					if ent.Character:GetAttribute('Hostile') then
-						table.insert(plrtag, {text = rich and 'ð¢' or 'Hostile'})
+						table.insert(plrtag, {text = rich and '💢' or 'Hostile'})
 					elseif ent.Character:GetAttribute('Trespassing') then
-						table.insert(plrtag, {text = rich and 'ð' or 'Trespassing'})
+						table.insert(plrtag, {text = rich and '🔗' or 'Trespassing'})
 					end
 				elseif plr.Team == teams.Guards then
 					local count = plr:GetAttribute('InnocentKills') or 0
