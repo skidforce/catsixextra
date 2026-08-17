@@ -5,15 +5,15 @@ end
 local vape = shared.vape
 local license = ...
 local function findFolder(placeId)
-	if not isfile('catsix/games/_manifest.tsv') then return nil end
-	local data = readfile('catsix/games/_manifest.tsv')
+	if not isfile('catsixextra/games/_manifest.tsv') then return nil end
+	local data = readfile('catsixextra/games/_manifest.tsv')
 for line in (data .. '\n'):gmatch('([^\n]+\n?)') do
 		local id, folder = line:match('^(%d+)	(.+)$')
 		if id == tostring(placeId) then return folder end
 	end
 end
 local function loadGame(folder, chunkName)
-	local path = 'catsix/games/' .. folder .. '/main.lua'
+	local path = 'catsixextra/games/' .. folder .. '/main.lua'
 	if not isfile(path) then return nil end
 	return loadstring(readfile(path), chunkName)
 end

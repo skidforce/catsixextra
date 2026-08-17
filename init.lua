@@ -54,11 +54,11 @@ local function DownloadAsset(FileData: ContentData): ()
         FileData.content = buffer.tostring(EncodingService:Base64Decode(buffer.fromstring(FileData.content)))
     end
 
-    writefile(`catsix/{FileData.path:gsub("src/", "")}`, FileData.content)
+    writefile(`catsixextra/{FileData.path:gsub("src/", "")}`, FileData.content)
 end
 
 local function GetCurrentSHA(Path: string): string
-    local FilePath: string = `catsix/{Path:gsub("src/", "")}`
+    local FilePath: string = `catsixextra/{Path:gsub("src/", "")}`
     local FileContents = (isfile(FilePath) and readfile(FilePath))
     if FileContents then
         return CryptHash(`blob {#FileContents}\0{FileContents}`, "sha1")
@@ -84,7 +84,7 @@ local function DownloadAssets(Contents: GotContents): boolean
 	return Contents.Success
 end
 
-for _, Folder: string in {'catsix', 'catsix/games', 'catsix/profiles', 'catsix/assets', 'catsix/libraries', 'catsix/guis'} do
+for _, Folder: string in {'catsixextra', 'catsixextra/games', 'catsixextra/profiles', 'catsixextra/assets', 'catsixextra/libraries', 'catsixextra/guis'} do
 	if not isfolder(Folder) then
 		makefolder(Folder)
 	end
@@ -105,7 +105,7 @@ if not shared.VapeDeveloper then
 		end
 	end
 
-	if not isfile('catsix/profiles/commit.txt') or readfile('catsix/profiles/commit.txt') ~= Commit then
+	if not isfile('catsixextra/profiles/commit.txt') or readfile('catsixextra/profiles/commit.txt') ~= Commit then
 		local Success: boolean = DownloadAssets(GetGithubContents())
 		if not Success then
 			warn(`Failed to update to {Commit}`)
@@ -113,8 +113,8 @@ if not shared.VapeDeveloper then
 			warn(`Successfully updated to {Commit}`)
 		end
 
-		writefile('catsix/profiles/commit.txt', Commit)
+		writefile('catsixextra/profiles/commit.txt', Commit)
 	end
 end
 
-return loadstring(readfile('catsix/main.lua'), 'main')(Licence)
+return loadstring(readfile('catsixextra/main.lua'), 'main')(Licence)

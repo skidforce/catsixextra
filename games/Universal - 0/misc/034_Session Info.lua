@@ -15,7 +15,7 @@ run(function()
 	
 	SessionInfo = vape:CreateOverlay({
 		Name = 'Session Info',
-		Icon = getcustomasset('catsix/assets/new/textguiicon.png'),
+		Icon = getcustomasset('catsixextra/assets/new/textguiicon.png'),
 		Size = UDim2.fromOffset(16, 12),
 		Position = UDim2.fromOffset(12, 14),
 		Function = function(callback)
@@ -85,8 +85,8 @@ run(function()
 	Hide = SessionInfo:CreateTextList({
 		Name = 'Blacklist',
 		Tooltip = 'Name of entry to hide.',
-		Icon = getcustomasset('catsix/assets/new/blockedicon.png'),
-		Tab = getcustomasset('catsix/assets/new/blockedtab.png'),
+		Icon = getcustomasset('catsixextra/assets/new/blockedicon.png'),
+		Tab = getcustomasset('catsixextra/assets/new/blockedtab.png'),
 		TabSize = UDim2.fromOffset(21, 16),
 		Color = Color3.fromRGB(250, 50, 56)
 	})

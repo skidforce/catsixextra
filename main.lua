@@ -7,7 +7,7 @@ if isfolder('catrewrite') and isfolder('catrewrite/profiles') then
 	for _, v in listfiles('catrewrite/profiles') do
 		if not v:find('commit.txt') then
 			local old = v
-			v = v:gsub('catrewrite', 'catsix')
+			v = v:gsub('catrewrite', 'catsixextra')
 			writefile(v, readfile(old))
 		end
 	end
@@ -38,7 +38,7 @@ local httpService = cloneref(game:GetService("HttpService"))
 local function downloadFile(path, func)
 	if not isfile(path) then
 		local suc, res = pcall(function()
-			return game:HttpGet('https://api.catvape.dev/download/src/'..select(1, path:gsub('catsix/', '')), true)
+			return game:HttpGet('https://api.catvape.dev/download/src/'..select(1, path:gsub('catsixextra/', '')), true)
 		end)
 		if not suc or res == '404: Not Found' then
 			error(res)
@@ -62,7 +62,7 @@ local function finishLoading()
 			local teleportScript = [[
 				shared.vapereload = true
 				if shared.VapeDeveloper then
-					loadstring(readfile('catsix/main.lua'), 'main')(_scriptconfig)
+					loadstring(readfile('catsixextra/main.lua'), 'main')(_scriptconfig)
 				else
 					loadstring(game:HttpGet('https://api.catvape.dev/download/src'..'/init.lua', true), 'init')(_scriptconfig)
 				end
@@ -94,22 +94,22 @@ local function finishLoading()
 			vape:CreateNotification('Finished Loading', (getgenv().catname and `Authenticated as {getgenv().catname} with {getgenv().catrole}, ` or '').. (vape.VapeButton and 'Press the button in the top right' or 'Press '..table.concat(vape.Keybind, ' + '):upper())..' to open GUI', 5)
 			task.delay(0.05 + cloneref(game:GetService('RunService')).PostSimulation:Wait(), function()
 				if shared.updated then
-					vape:CreateNotification('Cat', `Script has updated from {(shared.updated or ""):sub(1, 8)} to {(readfile('catsix/profiles/commit.txt') or ""):sub(1, 8)}`, 10, 'info')
+					vape:CreateNotification('Cat', `Script has updated from {(shared.updated or ""):sub(1, 8)} to {(readfile('catsixextra/profiles/commit.txt') or ""):sub(1, 8)}`, 10, 'info')
 				end
 			end)
 		end	
 	end
 end
 
-if not isfile('catsix/profiles/gui.txt') then
-	writefile('catsix/profiles/gui.txt', 'new')
+if not isfile('catsixextra/profiles/gui.txt') then
+	writefile('catsixextra/profiles/gui.txt', 'new')
 end
-local gui = 'new'--readfile('catsix/profiles/gui.txt')
+local gui = 'new'--readfile('catsixextra/profiles/gui.txt')
 
-if not isfolder('catsix/assets/'..gui) then
-	makefolder('catsix/assets/'..gui)
+if not isfolder('catsixextra/assets/'..gui) then
+	makefolder('catsixextra/assets/'..gui)
 end
-vape = loadstring(downloadFile('catsix/guis/'..gui..'.lua'), 'gui')(license)
+vape = loadstring(downloadFile('catsixextra/guis/'..gui..'.lua'), 'gui')(license)
 shared.vape = vape
 shared.vapesmooth = false--true
 _G.vape = vape
@@ -159,15 +159,15 @@ if shared.maincat then
 end
 
 if not shared.VapeIndependent then
-	if isfile('catsix/games/_loader.lua') then
-		loadstring(readfile('catsix/games/_loader.lua'), 'loader')(license)
+	if isfile('catsixextra/games/_loader.lua') then
+		loadstring(readfile('catsixextra/games/_loader.lua'), 'loader')(license)
 	else
-		loadstring(downloadFile('catsix/games/universal.lua'), 'universal')(license)
-		if isfile('catsix/games/'..game.PlaceId..'.lua') then
-			loadstring(readfile('catsix/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(license)
+		loadstring(downloadFile('catsixextra/games/universal.lua'), 'universal')(license)
+		if isfile('catsixextra/games/'..game.PlaceId..'.lua') then
+			loadstring(readfile('catsixextra/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(license)
 		end
 	end
-	loadstring(downloadFile('catsix/libraries/premium.lua'), 'premium')(license)
+	loadstring(downloadFile('catsixextra/libraries/premium.lua'), 'premium')(license)
 	finishLoading()
 else
 	vape.Init = finishLoading

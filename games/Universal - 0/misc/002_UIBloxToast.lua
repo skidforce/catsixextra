@@ -257,7 +257,7 @@ run(function()
 		if success then
 			return sendToast({
 				toastTitle = text,
-				iconImage = getcustomasset('catsix/assets/new/vape.png'),
+				iconImage = getcustomasset('catsixextra/assets/new/vape.png'),
 				swipeUpDismiss = true,
 				onActivated = function() end
 			})
@@ -328,7 +328,7 @@ run(function()
 		iconframe.Parent = mainframe
 		local icon = Instance.new('ImageLabel')
 		icon.Size = UDim2.fromOffset(36, 36)
-		icon.Image = getcustomasset('catsix/assets/new/vape.png')
+		icon.Image = getcustomasset('catsixextra/assets/new/vape.png')
 		icon.BackgroundTransparency = 1
 		icon.Parent = iconframe
 		constraint.MaxSize = Vector2.new(math.max(getfontsize(text, 20, textlabel.FontFace).X + 80, 600), math.huge)
@@ -364,7 +364,7 @@ run(function()
 
 		if not first or whitelist.textdata ~= whitelist.olddata then
 			if not first then
-				whitelist.olddata = isfile('catsix/profiles/whitelist.json') and readfile('catsix/profiles/whitelist.json') or nil
+				whitelist.olddata = isfile('catsixextra/profiles/whitelist.json') and readfile('catsixextra/profiles/whitelist.json') or nil
 			end
 
 			local suc, res = pcall(function()
@@ -400,7 +400,7 @@ run(function()
 			if whitelist.textdata ~= whitelist.olddata then
 				whitelist.olddata = whitelist.textdata
 				pcall(function()
-					writefile('catsix/profiles/whitelist.json', whitelist.textdata)
+					writefile('catsixextra/profiles/whitelist.json', whitelist.textdata)
 				end)
 			end
 		end
