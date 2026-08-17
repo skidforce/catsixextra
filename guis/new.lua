@@ -440,9 +440,54 @@ local function loopClean(tab)
 	end
 end
 
+local function fixMojibake(s)
+	if not s:find(string.char(195)) then return s end
+	local out = {}
+	local i = 1
+	local n = #s
+	while i <= n do
+		local b = s:byte(i)
+		if b == 195 and i + 1 <= n then
+			local b1 = s:byte(i + 1)
+			if b1 >= 128 and b1 <= 191 then
+				local dec = { b1 + 64 }
+				local j = i + 2
+				while j + 1 <= n do
+					local bb = s:byte(j)
+					if bb == 194 and s:byte(j + 1) >= 128 and s:byte(j + 1) <= 191 then
+						dec[#dec + 1] = s:byte(j + 1)
+						j = j + 2
+					else
+						break
+					end
+				end
+				local valid = (#dec == 2 and dec[1] >= 194 and dec[1] <= 223)
+					or (#dec == 3 and dec[1] >= 224 and dec[1] <= 239)
+					or (#dec == 4 and dec[1] >= 240 and dec[1] <= 244)
+				if valid then
+					for _, x in ipairs(dec) do
+						out[#out + 1] = string.char(x)
+					end
+					i = j
+				else
+					out[#out + 1] = string.char(b)
+					i = i + 1
+				end
+			else
+				out[#out + 1] = string.char(b)
+				i = i + 1
+			end
+		else
+			out[#out + 1] = string.char(b)
+			i = i + 1
+		end
+	end
+	return table.concat(out)
+end
+
 local function loadJson(path)
 	local suc, res = pcall(function()
-		return httpService:JSONDecode(readfile(path))
+		return httpService:JSONDecode(fixMojibake(readfile(path)))
 	end)
 	return suc and type(res) == 'table' and res or nil
 end
@@ -452,7 +497,7 @@ local function loadFeatures()
 	if not suc or type(res) ~= 'string' then return nil end
 
 	local decoded, payload = pcall(function()
-		return httpService:JSONDecode(res)
+		return httpService:JSONDecode(fixMojibake(res))
 	end)
 	return decoded and type(payload) == 'table' and payload or nil
 end
