@@ -7,7 +7,7 @@ local license = ...
 local function findFolder(placeId)
 	if not isfile('catsixextra/games/_manifest.tsv') then return nil end
 	local data = readfile('catsixextra/games/_manifest.tsv')
-for line in (data .. '\n'):gmatch('([^\n]+\n?)') do
+	for line in (data .. '\n'):gmatch('([^\r\n]+)\r?\n') do
 		local id, folder = line:match('^(%d+)	(.+)$')
 		if id == tostring(placeId) then return folder end
 	end
