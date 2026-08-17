@@ -174,7 +174,7 @@ local function downloadFile(path, func)
 	if not isfile(path) then
 		createDownloader(path)
 		local suc, res = pcall(function()
-			return game:HttpGet('https://api.catvape.dev/download/src/'..select(1, path:gsub('catsixextra/', '')), true)
+			return game:HttpGet('https://raw.githubusercontent.com/skidforce/catsixextra/main/'..select(1, path:gsub('catsixextra/', '')), true)
 		end)
 		if not suc or res == '404: Not Found' then
 			error(res)

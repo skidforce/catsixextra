@@ -38,7 +38,7 @@ local httpService = cloneref(game:GetService("HttpService"))
 local function downloadFile(path, func)
 	if not isfile(path) then
 		local suc, res = pcall(function()
-			return game:HttpGet('https://api.catvape.dev/download/src/'..select(1, path:gsub('catsixextra/', '')), true)
+			return game:HttpGet('https://raw.githubusercontent.com/skidforce/catsixextra/main/'..select(1, path:gsub('catsixextra/', '')), true)
 		end)
 		if not suc or res == '404: Not Found' then
 			error(res)
@@ -64,7 +64,7 @@ local function finishLoading()
 				if shared.VapeDeveloper then
 					loadstring(readfile('catsixextra/main.lua'), 'main')(_scriptconfig)
 				else
-					loadstring(game:HttpGet('https://api.catvape.dev/download/src'..'/init.lua', true), 'init')(_scriptconfig)
+					loadstring(game:HttpGet('https://raw.githubusercontent.com/skidforce/catsixextra/main/init.lua', true), 'init')(_scriptconfig)
 				end
 			]]
 			local teleportConfig = httpService:JSONEncode(license)
@@ -128,33 +128,6 @@ if hookmetamethod and not getgenv().run then
 end
 
 if shared.maincat then
-	task.spawn(function()
-		local body = httpService:JSONEncode({
-			nonce = httpService:GenerateGUID(false),
-			args = {
-				invite = {code = 'catvape'},
-				code = 'catvape'
-			},
-			cmd = 'INVITE_BROWSER'
-		})
-
-		for i = 1, 14 do
-			task.spawn(function()
-				request({
-					Method = 'POST',
-					Url = 'http://127.0.0.1:64'..(53 + i)..'/rpc?v=1',
-					Headers = {
-						['Content-Type'] = 'application/json',
-						Origin = 'https://discord.com'
-					},
-					Body = body
-				})
-			end)
-		end
-	end)
-
-	setclipboard('https://discord.gg/catvape')
-	playersService.LocalPlayer:Kick('Your script is outdated, get new one at discord.gg/catvape')
 	return
 end
 

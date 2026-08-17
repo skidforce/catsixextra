@@ -356,7 +356,7 @@ local function downloadFile(path, func)
 	if not isfile(path) then
 		createDownloader(path)
 		local suc, res = pcall(function()
-			return game:HttpGet('https://api.catvape.dev/download/src/'..select(1, path:gsub('catsixextra/', '')), true)
+			return game:HttpGet('https://raw.githubusercontent.com/skidforce/catsixextra/main/'..select(1, path:gsub('catsixextra/', '')), true)
 		end)
 		if not suc or res == '404: Not Found' then
 			error(res)
@@ -10875,7 +10875,7 @@ Profiles:CreateButton({
 		if shared.VapeDeveloper then
 			loadstring(readfile('catsixextra/init.lua'), 'init')(license)
 		else
-			loadstring(game:HttpGet('https://api.catvape.dev/download/src'..'/init.lua', true))(license)
+			loadstring(game:HttpGet('https://raw.githubusercontent.com/skidforce/catsixextra/main/init.lua', true))(license)
 		end
 	end,
 	Tooltip = 'This will set your profile to the default settings of Cat Vape'
@@ -10937,7 +10937,7 @@ general:CreateButton({
 		if shared.VapeDeveloper then
 			loadstring(readfile('catsixextra/init.lua'), 'init')()
 		else
-			loadstring(game:HttpGet('https://api.catvape.dev/download/src'..'/init.lua', true))()
+			loadstring(game:HttpGet('https://raw.githubusercontent.com/skidforce/catsixextra/main/init.lua', true))()
 		end
 	end,
 	Tooltip = 'Reloads vape for debugging purposes'
@@ -11060,7 +11060,7 @@ guipane:CreateDropdown({
 			if shared.VapeDeveloper then
 				loadstring(readfile('catsixextra/init.lua'), 'loader')()
 			else
-				loadstring(game:HttpGet('https://api.catvape.dev/download/src'..'/init.lua', true))()
+				loadstring(game:HttpGet('https://raw.githubusercontent.com/skidforce/catsixextra/main/init.lua', true))()
 			end
 		end
 	end,
