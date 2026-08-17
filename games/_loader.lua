@@ -13,14 +13,24 @@ local function findFolder(placeId)
 	end
 	local ok, info = pcall(function() return game:GetService('MarketplaceService'):GetProductInfo(placeId) end)
 	if ok and info and type(info.Name) == 'string' then
+		local name = info.Name:lower()
+		warn('[catsixextra] no manifest entry for place ' .. tostring(placeId) .. ' (' .. info.Name .. '), matching by name')
 		for line in (data .. '\n'):gmatch('([^\r\n]+)\r?\n') do
 			local id, folder = line:match('^(%d+)	(.+)$')
-			if folder and folder:find(info.Name, 1, true) == 1 then return folder end
+			if folder and folder:lower():find(name, 1, true) == 1 then return folder end
 		end
 		for line in (data .. '\n'):gmatch('([^\r\n]+)\r?\n') do
 			local id, folder = line:match('^(%d+)	(.+)$')
-			if folder and folder:find(info.Name, 1, true) then return folder end
+			if folder and folder:lower():find(name, 1, true) then return folder end
 		end
+		if name:find('bedwars', 1, true) then
+			for line in (data .. '\n'):gmatch('([^\r\n]+)\r?\n') do
+				local id, folder = line:match('^(%d+)	(.+)$')
+				if folder and folder:lower():find('bedwars', 1, true) then return folder end
+			end
+		end
+	else
+		warn('[catsixextra] no manifest entry for place ' .. tostring(placeId) .. ' and name lookup failed')
 	end
 end
 local function loadGame(folder, chunkName)
