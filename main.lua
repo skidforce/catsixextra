@@ -133,8 +133,16 @@ end
 
 if not shared.VapeIndependent then
 	loadstring(downloadFile('catsixextra/games/universal.lua'), 'universal')(license)
-	if isfile('catsixextra/games/'..game.PlaceId..'.lua') then
-		loadstring(readfile('catsixextra/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(license)
+	local placeAliases = {
+		[8444591321] = 6872274481,
+		[8560631822] = 6872274481,
+	}
+	local id = placeAliases[game.PlaceId] or game.PlaceId
+	if id ~= game.PlaceId then
+		vape.Place = id
+	end
+	if isfile('catsixextra/games/'..id..'.lua') then
+		loadstring(readfile('catsixextra/games/'..id..'.lua'), tostring(id))(license)
 	else
 		warn('[catsixextra] no script for place '..game.PlaceId)
 	end
