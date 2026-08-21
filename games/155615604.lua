@@ -31,7 +31,8 @@ local entitylib = vape.Libraries.entity
 local whitelist = vape.Libraries.whitelist
 local targetinfo = vape.Libraries.targetinfo
 local sessioninfo = vape.Libraries.sessioninfo
-local getfontsize = vape.Libraries.getfontsize
+local getfontbounds = vape.Libraries.getfontbounds
+local getvapeasset = vape.Libraries.getvapeasset
 
 local pl = {}
 local Spring = {}
@@ -262,7 +263,7 @@ run(function()
 		if entity.NPC then return true end
 		if isFriend(entity.Player) then return false end
 		if not select(2, whitelist:get(entity.Player)) then return false end
-		if vape.Categories.Main.Options['Teams by server'].Enabled then
+		if vape.Settings.Modules.Options['Teams by server'].Enabled then
 			return lplr.Team ~= entity.Player.Team and entity.Player.Team ~= teams.Neutral
 		end
 		return true
@@ -388,7 +389,7 @@ run(function()
 	end
 
 	entitylib.getEntityColor = function(ent)
-		if not (ent.Player and vape.Categories.Main.Options['Use team color'].Enabled) then return end
+		if not (ent.Player and vape.Settings.Modules.Options['Use team color'].Enabled) then return end
 		if isFriend(ent.Player, true) then
 			return Color3.fromHSV(vape.Categories.Friends.Options['Friends color'].Hue, vape.Categories.Friends.Options['Friends color'].Sat, vape.Categories.Friends.Options['Friends color'].Value)
 		end
@@ -2773,6 +2774,8 @@ run(function()
 	
 	BulletTracers = vape.Legit:CreateModule({
 		Name = 'BulletTracers',
+		Category = 'Game',
+		Icon = getvapeasset('catsixextra/assets/new/legit_bullettracers.png'),
 		Function = function(callback)
 			if callback then
 				TracerHook:Add('BulletTracers', function(...)
@@ -2886,6 +2889,8 @@ run(function()
 	
 	Crosshair = vape.Legit:CreateModule({
 		Name = 'Crosshair',
+		Category = 'Game',
+		Icon = getvapeasset('catsixextra/assets/new/legit_crosshair.png'),
 		Function = function(callback)
 			if callback then
 				debug.setconstant(oldequip or pl.Equip, 30, Image.Value:find('rbxasset') and Image.Value or isfile(Image.Value) and getcustomasset(Image.Value) or '')
@@ -2990,6 +2995,8 @@ run(function()
 	
 	DamageIndicator = vape.Legit:CreateModule({
 		Name = 'DamageIndicator',
+		Category = 'Game',
+		Icon = getvapeasset('catsixextra/assets/new/legit_damageindicator.png'),
 		Function = function(callback)
 			if callback then
 				TracerHook:Add('DamageIndicator', function(...)
@@ -3066,6 +3073,8 @@ run(function()
 	
 	HitSound = vape.Legit:CreateModule({
 		Name = 'HitSound',
+		Category = 'Game',
+		Icon = getvapeasset('catsixextra/assets/new/legit_hitsound.png'),
 		Function = function(callback)
 			if callback then
 				local played
@@ -3129,6 +3138,8 @@ run(function()
 	
 	KillSound = vape.Legit:CreateModule({
 		Name = 'KillSound',
+		Category = 'Game',
+		Icon = getvapeasset('catsixextra/assets/new/legit_killsound.png'),
 		Function = function(callback)
 			if callback then
 				KillSound:Clean(vapeEvents.PlayerKill.Event:Connect(function(plr)
@@ -3237,6 +3248,8 @@ run(function()
 	
 	Viewmodel = vape.Legit:CreateModule({
 		Name = 'Viewmodel',
+		Category = 'Game',
+		Icon = getvapeasset('catsixextra/assets/new/legit_viewmodel.png'),
 		Function = function(callback)
 			if callback then
 				TracerHook:Add('Viewmodel', function(...)

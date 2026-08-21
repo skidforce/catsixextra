@@ -1,15 +1,43 @@
 {
 	"added": [
-		"JadeAura",
-		"BeekeeperSpy"
+		"AutoLumen",
+		"AutoBountyHunter",
+		"BountyHunterSpy",
+		"AntiSuffocate",
+		"ArmorChanger",
+		"AutoWin",
+		"BedAlarm",
+		"Potion Status",
+		"Compass",
+		"Coords"
 	],
 	"updated": [
+		"BowAssist",
+		"AutoKaliyah",
+		"AutoGrim",
+		"FPS Boost",
+		"SilentAim",
+		"AutoDavey",
+		"AutoEldric",
+		"TriggerBot",
+		"AutoKit",
+		"DaveyAim",
+		"AutoGingerbreadMan",
+		"Killaura",
+		"AutoFreiya",
+		"AutoMartin",
+		"AutoPyro",
+		"AutoHephaestus",
+		"AutoMelody",
+		"SkinChanger",
+		"ProjectileAura",
+		"AutoShoot",
+		"Crosshair",
+		"ProjectileAimbot",
 		"AutoClicker",
-		"SetEmote",
-		"NameTags",
-		"ESP",
-		"Arrows",
-		"Tracers"
+		"Viewmodel",
+		"AutoHannah",
+		"Nuker"
 	],
-	"text": "[BEDWARS]\n\u001b[2;32m[+]\u001b[0m WE ARE BACK WITH SOLARA AND XENO SUPPORT BABY (this took me too long, consistent updates starting tomorrow)\n    -> Current unsupported features: Anti-AFK, AutoDavey, AutoVanessa, BedBreakEffect, BowAssist, CannonSpeed, CleanKit, Crosshair, DamageIndicator, DeathAdderAimbot, FastConsume, HitFix, InfiniteKrystal, Interface, KeepSprint, SilentAim, UICleanup, VoidRegentExtender, FastBreak and WinEffect (theres prob more but idk what)\n\u001b[2;32m[+]\u001b[0m Added JadeAura (deals over 150 damage per 2s [i think 2s {its aoe damage too}]) \u001b[2;35m[PAID]\u001b[0m\n\u001b[2;32m[+]\u001b[0m Added BeekeeperSpy \u001b[2;35m[PAID]\u001b[0m\n\u001b[2;33m[!]\u001b[0m Fixed AutoClicker mobile being slow for bridging\n\u001b[2;33m[!]\u001b[0m Fixed SetEmote\n\u001b[2;33m[!]\u001b[0m Fixed ESP, NameTags, Arrows and Tracers not rendering on some executors\n\u001b[2;34m[*]\u001b[0m Improved AutoClicker mobile for swords\n[GENERAL]\n\u001b[2;33m[!]\u001b[0m Fixed script not loading for people with shitty internet\n\u001b[2;33m[!]\u001b[0m Fixed boosters not getting premium script\n\u001b[2;34m[*]\u001b[0m Reworked script init (should instantly load for new users or when the script updates, W lr for doing all of that)\n\u001b[2;34m[*]\u001b[0m Made reinstall script notify and then rerun the main script"
+	"text": "[BEDWARS]\n\u001b[2;32m[+]\u001b[0m Reworked & Added BedAlarm (with pearl detections so it'll detect when they throw a pearl that'll land to ur base)\n\u001b[2;32m[+]\u001b[0m Added Controllers support to AutoClicker\n\u001b[2;32m[+]\u001b[0m Added MetalDetectorSpy and BeekeeperSpy to Free Version\n\u001b[2;32m[+]\u001b[0m Added AutoWin (automatically plays the whole game for you, recommended when u get bored of ts shitty ass match) \u001b[2;35m[PAID]\u001b[0m\n\u001b[2;32m[+]\u001b[0m Added BountyHunterSpy (notifies when a bounty hunter kills the player they were assigned, and what loot they took) \u001b[2;35m[PAID]\u001b[0m\n\u001b[2;32m[+]\u001b[0m Added Horziontal & Vertical prediction to ProjectileAimbot\n\u001b[2;32m[+]\u001b[0m Added AutoLumen (charges the sword of light and swings a wave at enemies, Killaura skips that sword)\n\u001b[2;32m[+]\u001b[0m Added Blacklist to BowAssist\t\n\u001b[2;32m[+]\u001b[0m Added Stacks to AutoKaliyah (punch at 3 stacks for 25 damage instead of 10)\n\u001b[2;32m[+]\u001b[0m Added Health to AutoGrim (choose what health percentage will the grim ability trigger at)\n\u001b[2;32m[+]\u001b[0m Added Lighting and Particles to FPS Boost\n\u001b[2;32m[+]\u001b[0m Added Continue after kill to TriggerBot (keeps swinging so the next enemy walking in gets hit right away)\n\u001b[2;32m[+]\u001b[0m Added AutoBountyHunter (keeps the bounty tracker up and rerolls bounties you cannot reach)\n\u001b[2;32m[+]\u001b[0m Added AntiSuffocate (moves or breaks you out of a block placed on top of you)\n\u001b[2;32m[+]\u001b[0m Added Priority to AutoEldric\n\u001b[2;32m[+]\u001b[0m Added Delay to AutoFreiya, AutoMartin and AutoPyro\n\u001b[2;32m[+]\u001b[0m Added Summon tinker to AutoHephaestus\n\u001b[2;32m[+]\u001b[0m Added Use hotbar and Switch back to AutoMelody\n\u001b[2;32m[+]\u001b[0m Added ArmorChanger (puts an armor trim on yourself, only you can see it)\n\u001b[2;32m[+]\u001b[0m Added Use nazar to Killaura, ProjectileAura and AutoShoot\n\u001b[2;32m[+]\u001b[0m Added Targets to AutoEldric\n\u001b[2;32m[+]\u001b[0m Added Potion Status (every effect on you with its timer, in the legit tab)\n\u001b[2;32m[+]\u001b[0m Added Combo Counter, Combo Comparator and Damage Comparator to TargetInfo\n\u001b[2;33m[!]\u001b[0m Fixed SilentAim firing every projectile twice\n\u001b[2;33m[!]\u001b[0m Fixed Crosshair not working\n\u001b[2;33m[!]\u001b[0m Fixed AutoDavey breaking the cannon before you launch\n\u001b[2;33m[!]\u001b[0m Fixed AutoEldric never linking the staff\n\u001b[2;33m[!]\u001b[0m Fixed AutoKit never picking up Evelynn souls\n\u001b[2;33m[!]\u001b[0m Fixed AutoDavey not breaking cannon properly\n\u001b[2;33m[!]\u001b[0m Fixed DaveyAim taking fall damage on every landing\n\u001b[2;33m[!]\u001b[0m Fixed DaveyAim landing off target on short distances\n\u001b[2;33m[!]\u001b[0m Fixed AutoGingerbreadMan legit switch never switching\n\u001b[2;33m[!]\u001b[0m Fixed Killaura losing hitreg on low fps\n\u001b[2;33m[!]\u001b[0m Fixed AutoHannah missing most of its executes\n\u001b[2;33m[!]\u001b[0m Fixed Viewmodel deleting your item every time you respawn\n\u001b[2;33m[!]\u001b[0m Fixed Viewmodel Size not changing how big the item looks\n\u001b[2;33m[!]\u001b[0m Fixed SkinChanger rendering the old item under the skin in third person\n\u001b[2;34m[*]\u001b[0m Renamed \"Breaker\" to \"Nuker\"\n\u001b[2;34m[*]\u001b[0m Made SkinChanger play the skin's sounds\n\u001b[2;31m[-]\u001b[0m Removed Dynamic Delay from killaura\n\u001b[2;31m[-]\u001b[0m Removed SetSettings\n[UNIVERSAL]\n\u001b[2;32m[+]\u001b[0m Added Compass HUD\n\u001b[2;32m[+]\u001b[0m Added Coords HUD\n[GENERAL]\n\u001b[2;33m[!]\u001b[0m Fixed HWID MISMATCHES not appearing (reason why u dont have the role ur supposed to get)\n\u001b[2;34m[*]\u001b[0m Revamped GUI (updated to the rewrite and did alot of changes)\n\t-> Added Kits tab (but removed minigames tab sorry)\n\t-> Added the vape button back\nnote: now you have to open the profiles settings to see the \"reset current profile\" and \"sync to default profile\" options"
 }

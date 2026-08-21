@@ -14,7 +14,7 @@ end
 local function downloadFile(path, func)
 	if not isfile(path) then
 		local suc, res = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/skidforce/catsixextra/main/'..select(1, path:gsub('catsixextra/', '')), true)
+			return game:HttpGet('https://api.catvape.dev/download/src/'..select(1, path:gsub('catsixextra/', '')), true)
 		end)
 		if not suc or res == '404: Not Found' then
 			error(res)
@@ -61,8 +61,9 @@ local assetfunction = getcustomasset
 local vape = shared.vape
 local tween = vape.Libraries.tween
 local targetinfo = vape.Libraries.targetinfo
-local getfontsize = vape.Libraries.getfontsize
-local getcustomasset = vape.Libraries.getcustomasset
+local getfontbounds = vape.Libraries.getfontbounds
+local getvapeasset = vape.Libraries.getvapeasset
+local uipallet = vape.Libraries.uipallet
 
 local TargetStrafeVector, SpiderShift, WaypointFolder
 local Spider = {Enabled = false}
@@ -74,7 +75,7 @@ local function addBlur(parent)
 	blur.Size = UDim2.new(1, 89, 1, 52)
 	blur.Position = UDim2.fromOffset(-48, -31)
 	blur.BackgroundTransparency = 1
-	blur.Image = getcustomasset('catsixextra/assets/new/blur.png')
+	blur.Image = getvapeasset('catsixextra/assets/new/blur.png')
 	blur.ScaleType = Enum.ScaleType.Slice
 	blur.SliceCenter = Rect.new(52, 31, 261, 502)
 	blur.Parent = parent
@@ -360,7 +361,7 @@ run(function()
 		if ent.NPC then return true end
 		if isFriend(ent.Player) then return false end
 		if not select(2, whitelist:get(ent.Player)) then return false end
-		if vape.Categories.Main.Options['Teams by server'].Enabled then
+		if vape.Settings.Modules.Options['Teams by server'].Enabled then
 			if not lplr.Team then return true end
 			if not ent.Player.Team then return true end
 			if ent.Player.Team ~= lplr.Team then return true end
@@ -371,7 +372,7 @@ run(function()
 
 	entitylib.getEntityColor = function(ent)
 		ent = ent.Player
-		if not (ent and vape.Categories.Main.Options['Use team color'].Enabled) then return end
+		if not (ent and vape.Settings.Modules.Options['Use team color'].Enabled) then return end
 		if isFriend(ent, true) then
 			return Color3.fromHSV(vape.Categories.Friends.Options['Friends color'].Hue, vape.Categories.Friends.Options['Friends color'].Sat, vape.Categories.Friends.Options['Friends color'].Value)
 		end
@@ -648,7 +649,7 @@ run(function()
 		if success then
 			return sendToast({
 				toastTitle = text,
-				iconImage = getcustomasset('catsixextra/assets/new/vape.png'),
+				iconImage = getvapeasset('catsixextra/assets/new/vape.png'),
 				swipeUpDismiss = true,
 				onActivated = function() end
 			})
@@ -719,10 +720,10 @@ run(function()
 		iconframe.Parent = mainframe
 		local icon = Instance.new('ImageLabel')
 		icon.Size = UDim2.fromOffset(36, 36)
-		icon.Image = getcustomasset('catsixextra/assets/new/vape.png')
+		icon.Image = getvapeasset('catsixextra/assets/new/vape.png')
 		icon.BackgroundTransparency = 1
 		icon.Parent = iconframe
-		constraint.MaxSize = Vector2.new(math.max(getfontsize(text, 20, textlabel.FontFace).X + 80, 600), math.huge)
+		constraint.MaxSize = Vector2.new(math.max(getfontbounds(text, 20, textlabel.FontFace).X + 80, 600), math.huge)
 
 		tween:Tween(container, TweenInfo.new(0.3), {
 			Position = UDim2.new(0.5, 0, 0, 20)
@@ -1130,6 +1131,85 @@ run(function()
 		Max = 20,
 		DefaultMin = 8,
 		DefaultMax = 12
+	})
+end)
+
+run(function()
+	local MurderMystery
+	local murderer, sheriff, oldtargetable, oldgetcolor
+	
+	local function itemAdded(v, plr)
+		if v:IsA('Tool') then
+			local check = v:FindFirstChild('IsGun') and 'sheriff' or v:FindFirstChild('KnifeServer') and 'murderer' or nil
+			check = check or v.Name:lower():find('knife') and 'murderer' or v.Name:lower():find('gun') and 'sheriff' or nil
+	
+			if check == 'murderer' and plr ~= murderer then
+				murderer = plr
+				if plr.Character then
+					entitylib.refresh()
+				end
+			elseif check == 'sheriff' and plr ~= sheriff then
+				sheriff = plr
+				if plr.Character then
+					entitylib.refresh()
+				end
+			end
+		end
+	end
+	
+	local function playerAdded(plr)
+		MurderMystery:Clean(plr.DescendantAdded:Connect(function(v)
+			itemAdded(v, plr)
+		end))
+	
+		local pack = plr:FindFirstChildWhichIsA('Backpack')
+		if pack then
+			for _, v in pack:GetChildren() do
+				itemAdded(v, plr)
+			end
+		end
+	
+		if plr.Character then
+			for _, v in plr.Character:GetChildren() do
+				itemAdded(v, plr)
+			end
+		end
+	end
+	
+	MurderMystery = vape.Categories.Combat:CreateModule({
+		Name = 'MurderMystery',
+		Function = function(callback)
+			if callback then
+				oldtargetable, oldgetcolor = entitylib.targetCheck, entitylib.getEntityColor
+	
+				entitylib.getEntityColor = function(ent)
+					ent = ent.Player
+					if not (ent and vape.Settings.Modules.Options['Use team color'].Enabled) then return end
+					if isFriend(ent, true) then
+						return Color3.fromHSV(vape.Categories.Friends.Options['Friends color'].Hue, vape.Categories.Friends.Options['Friends color'].Sat, vape.Categories.Friends.Options['Friends color'].Value)
+					end
+					return murderer == ent and Color3.new(1, 0.3, 0.3) or sheriff == ent and Color3.new(0, 0.5, 1) or nil
+				end
+	
+				entitylib.targetCheck = function(ent)
+					if ent.Player and isFriend(ent.Player) then return false end
+					if murderer == lplr then return true end
+					return murderer == ent.Player or sheriff == ent.Player
+				end
+	
+				for _, v in playersService:GetPlayers() do
+					playerAdded(v)
+				end
+	
+				MurderMystery:Clean(playersService.PlayerAdded:Connect(playerAdded))
+				entitylib.refresh()
+			else
+				entitylib.getEntityColor = oldgetcolor
+				entitylib.targetCheck = oldtargetable
+				entitylib.refresh()
+			end
+		end,
+		Tooltip = 'Automatic murder mystery teaming based on equipped roblox tools.'
 	})
 end)
 
@@ -3014,7 +3094,7 @@ run(function()
 			updateVelocity()
 			if callback then
 				Speed:Clean(runService.PreSimulation:Connect(function(dt)
-					if entitylib.isAlive and not Fly.Enabled and not LongJump.Enabled then
+					if entitylib.isAlive and not Fly.Enabled and not vape.Modules.LongJump.Enabled then
 						local state = entitylib.character.Humanoid:GetState()
 						if state == Enum.HumanoidStateType.Climbing then return end
 	
@@ -3555,7 +3635,7 @@ run(function()
 		arrow.BackgroundTransparency = 1
 		arrow.BorderSizePixel = 0
 		arrow.Visible = false
-		arrow.Image = getcustomasset('catsixextra/assets/new/arrowmodule.png')
+		arrow.Image = getvapeasset('catsixextra/assets/new/arrowmodule.png')
 		arrow.ImageColor3 = entitylib.getEntityColor(ent) or Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
 		arrow.Parent = Folder
 		Reference[ent] = arrow
@@ -4795,7 +4875,7 @@ run(function()
 			local nametag = Instance.new('TextLabel')
 			nametag.TextSize = 14 * Scale.Value
 			nametag.FontFace = FontOption.Value
-			local size = getfontsize(removeTags(Strings[ent]), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
+			local size = getfontbounds(removeTags(Strings[ent]), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
 			nametag.Name = ent.Player and ent.Player.Name or ent.Character.Name
 			nametag.Size = UDim2.fromOffset(size.X + 8, size.Y + 7)
 			nametag.AnchorPoint = Vector2.new(0.5, 1)
@@ -4893,7 +4973,7 @@ run(function()
 					Strings[ent] = '<font color="rgb(85, 255, 85)">[</font><font color="rgb(255, 255, 255)">%s</font><font color="rgb(85, 255, 85)">]</font> '..Strings[ent]
 				end
 	
-				local size = getfontsize(removeTags(Strings[ent]), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
+				local size = getfontbounds(removeTags(Strings[ent]), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
 				nametag.Size = UDim2.fromOffset(size.X + 8, size.Y + 7)
 				nametag.Text = Strings[ent]
 			end
@@ -4964,7 +5044,7 @@ run(function()
 					local mag = entitylib.isAlive and math.floor((entitylib.character.RootPart.Position - ent.RootPart.Position).Magnitude) or 0
 					if Sizes[ent] ~= mag then
 						nametag.Text = string.format(Strings[ent], mag)
-						local ize = getfontsize(removeTags(nametag.Text), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
+						local ize = getfontbounds(removeTags(nametag.Text), nametag.TextSize, nametag.FontFace, Vector2.new(100000, 100000))
 						nametag.Size = UDim2.fromOffset(ize.X + 8, ize.Y + 7)
 						Sizes[ent] = mag
 					end
@@ -5352,7 +5432,7 @@ run(function()
 	
 	Radar = vape:CreateOverlay({
 		Name = 'Radar',
-		Icon = getcustomasset('catsixextra/assets/new/radaricon.png'),
+		Icon = getvapeasset('catsixextra/assets/new/radaricon.png'),
 		Size = UDim2.fromOffset(14, 14),
 		Position = UDim2.fromOffset(12, 13),
 		Function = function(callback)
@@ -5573,7 +5653,7 @@ run(function()
 	
 	SessionInfo = vape:CreateOverlay({
 		Name = 'Session Info',
-		Icon = getcustomasset('catsixextra/assets/new/textguiicon.png'),
+		Icon = getvapeasset('catsixextra/assets/new/textguiicon.png'),
 		Size = UDim2.fromOffset(16, 12),
 		Position = UDim2.fromOffset(12, 14),
 		Function = function(callback)
@@ -5627,7 +5707,7 @@ run(function()
 						infolabel.Text = table.concat(stuff, '\n')
 						infolabel.FontFace = FontOption.Value
 						infolabel.TextSize = TextSize.Value
-						local size = getfontsize(removeTags(infolabel.Text), infolabel.TextSize, infolabel.FontFace)
+						local size = getfontbounds(removeTags(infolabel.Text), infolabel.TextSize, infolabel.FontFace)
 						infoholder.Size = UDim2.fromOffset(size.X + 16, size.Y + (Title.Enabled and TitleOffset.Enabled and 4 or 16))
 					end
 	
@@ -5643,8 +5723,8 @@ run(function()
 	Hide = SessionInfo:CreateTextList({
 		Name = 'Blacklist',
 		Tooltip = 'Name of entry to hide.',
-		Icon = getcustomasset('catsixextra/assets/new/blockedicon.png'),
-		Tab = getcustomasset('catsixextra/assets/new/blockedtab.png'),
+		Icon = getvapeasset('catsixextra/assets/new/blockedicon.png'),
+		Tab = getvapeasset('catsixextra/assets/new/blockedtab.png'),
 		TabSize = UDim2.fromOffset(21, 16),
 		Color = Color3.fromRGB(250, 50, 56)
 	})
@@ -5978,7 +6058,7 @@ run(function()
 			if callback then
 				for _, v in List.ListEnabled do
 					local split = v:split('/')
-					local tagSize = getfontsize(removeTags(split[2]), 14 * Scale.Value, FontOption.Value, Vector2.new(100000, 100000))
+					local tagSize = getfontbounds(removeTags(split[2]), 14 * Scale.Value, FontOption.Value, Vector2.new(100000, 100000))
 					local billboard = Instance.new('BillboardGui')
 					billboard.Size = UDim2.fromOffset(tagSize.X + 8, tagSize.Y + 7)
 					billboard.StudsOffsetWorldSpace = Vector3.new(unpack(split[1]:split(',')))
@@ -7204,85 +7284,6 @@ run(function()
 end)
 
 run(function()
-	local MurderMystery
-	local murderer, sheriff, oldtargetable, oldgetcolor
-	
-	local function itemAdded(v, plr)
-		if v:IsA('Tool') then
-			local check = v:FindFirstChild('IsGun') and 'sheriff' or v:FindFirstChild('KnifeServer') and 'murderer' or nil
-			check = check or v.Name:lower():find('knife') and 'murderer' or v.Name:lower():find('gun') and 'sheriff' or nil
-	
-			if check == 'murderer' and plr ~= murderer then
-				murderer = plr
-				if plr.Character then
-					entitylib.refresh()
-				end
-			elseif check == 'sheriff' and plr ~= sheriff then
-				sheriff = plr
-				if plr.Character then
-					entitylib.refresh()
-				end
-			end
-		end
-	end
-	
-	local function playerAdded(plr)
-		MurderMystery:Clean(plr.DescendantAdded:Connect(function(v)
-			itemAdded(v, plr)
-		end))
-	
-		local pack = plr:FindFirstChildWhichIsA('Backpack')
-		if pack then
-			for _, v in pack:GetChildren() do
-				itemAdded(v, plr)
-			end
-		end
-	
-		if plr.Character then
-			for _, v in plr.Character:GetChildren() do
-				itemAdded(v, plr)
-			end
-		end
-	end
-	
-	MurderMystery = vape.Categories.Minigames:CreateModule({
-		Name = 'MurderMystery',
-		Function = function(callback)
-			if callback then
-				oldtargetable, oldgetcolor = entitylib.targetCheck, entitylib.getEntityColor
-	
-				entitylib.getEntityColor = function(ent)
-					ent = ent.Player
-					if not (ent and vape.Categories.Main.Options['Use team color'].Enabled) then return end
-					if isFriend(ent, true) then
-						return Color3.fromHSV(vape.Categories.Friends.Options['Friends color'].Hue, vape.Categories.Friends.Options['Friends color'].Sat, vape.Categories.Friends.Options['Friends color'].Value)
-					end
-					return murderer == ent and Color3.new(1, 0.3, 0.3) or sheriff == ent and Color3.new(0, 0.5, 1) or nil
-				end
-	
-				entitylib.targetCheck = function(ent)
-					if ent.Player and isFriend(ent.Player) then return false end
-					if murderer == lplr then return true end
-					return murderer == ent.Player or sheriff == ent.Player
-				end
-	
-				for _, v in playersService:GetPlayers() do
-					playerAdded(v)
-				end
-	
-				MurderMystery:Clean(playersService.PlayerAdded:Connect(playerAdded))
-				entitylib.refresh()
-			else
-				entitylib.getEntityColor = oldgetcolor
-				entitylib.targetCheck = oldtargetable
-				entitylib.refresh()
-			end
-		end,
-		Tooltip = 'Automatic murder mystery teaming based on equipped roblox tools.'
-	})
-end)
-
-run(function()
 	local Atmosphere
 	local Toggles = {}
 	local newobjects, oldobjects = {}, {}
@@ -7345,6 +7346,8 @@ run(function()
 	
 	Atmosphere = vape.Legit:CreateModule({
 		Name = 'Atmosphere',
+		Category = 'Game',
+		Icon = getvapeasset('catsixextra/assets/new/legit_atmosphere.png'),
 		Function = function(callback)
 			if callback then
 				for _, v in lightingService:GetChildren() do
@@ -7442,6 +7445,8 @@ run(function()
 	
 	Breadcrumbs = vape.Legit:CreateModule({
 		Name = 'Breadcrumbs',
+		Category = 'Game',
+		Icon = getvapeasset('catsixextra/assets/new/legit_breadcrumbs.png'),
 		Function = function(callback)
 			if callback then
 				point = Instance.new('Attachment')
@@ -7561,6 +7566,8 @@ run(function()
 	
 	Cape = vape.Legit:CreateModule({
 		Name = 'Cape',
+		Category = 'Game',
+		Icon = getvapeasset('catsixextra/assets/new/legit_cape.png'),
 		Function = function(callback)
 			if callback then
 				part = Instance.new('Part')
@@ -7580,7 +7587,7 @@ run(function()
 	
 				if Texture.Value:find('.webm') then
 					local decal = Instance.new('VideoFrame')
-					decal.Video = getcustomasset(Texture.Value)
+					decal.Video = getvapeasset(Texture.Value)
 					decal.Size = UDim2.fromScale(1, 1)
 					decal.BackgroundTransparency = 1
 					decal.Looped = true
@@ -7629,6 +7636,8 @@ run(function()
 	
 	ChinaHat = vape.Legit:CreateModule({
 		Name = 'China Hat',
+		Category = 'Game',
+		Icon = getvapeasset('catsixextra/assets/new/legit_chinahat.png'),
 		Function = function(callback)
 			if callback then
 				if vape.ThreadFix then
@@ -7705,53 +7714,636 @@ end)
 
 run(function()
 	local Clock
+	local ClockType
+	local ShowDate
 	local TwentyFourHour
-	local label
+	local Background
+	local BackgroundColor
+	local shadows = {}
+	local skippedticks = {[8] = true, [9] = true, [10] = true, [14] = true, [15] = true, [16] = true, [20] = true, [21] = true, [22] = true}
+	local localtime, utctime = os.date('*t'), os.date('!*t')
+	local timezone = ((localtime.yday - utctime.yday) * 24) + localtime.hour - utctime.hour
+	timezone = timezone > 12 and timezone - 24 or (timezone < -12 and timezone + 24 or timezone)
+	local americandate = timezone <= -2 and timezone >= -11
+	local holder, analog, digital, hand
+	local analoghour, analogminute, analogweekday, analogdate, analogmeridiem
+	local digitalhour, digitalminute, digitalmeridiem, digitaldate, digitalweekday
+	
+	local function addLabel(parent, textsize, alignment)
+		local label = Instance.new('TextLabel')
+		label.BackgroundTransparency = 1
+		label.FontFace = uipallet.FontDisplay
+		label.Size = UDim2.fromOffset(200, textsize + 6)
+		label.Text = ''
+		label.TextColor3 = Color3.new(1, 1, 1)
+		label.TextSize = textsize
+		label.TextXAlignment = alignment
+		label.Parent = parent
+		local shadow = label:Clone()
+		shadow.Name = 'Shadow'
+		shadow.TextColor3 = Color3.new()
+		shadow.TextTransparency = 0.498
+		shadow.Visible = false
+		shadow.ZIndex = 0
+		shadow.Parent = parent
+		shadows[label] = shadow
+	
+		return label
+	end
+	
+	local function addTick(x, y)
+		local tick = Instance.new('Frame')
+		tick.AnchorPoint = Vector2.new(0.5, 0.5)
+		tick.BackgroundColor3 = Color3.new(1, 1, 1)
+		tick.BorderSizePixel = 0
+		tick.Position = UDim2.fromOffset(x, y)
+		tick.Size = UDim2.fromOffset(3, 3)
+		tick.Parent = analog
+		local corner = Instance.new('UICorner')
+		corner.CornerRadius = UDim.new(1, 0)
+		corner.Parent = tick
+	end
+	
+	local function placeLabel(label, x, centery)
+		label.Position = UDim2.fromOffset(label.TextXAlignment == Enum.TextXAlignment.Right and x - 200 or x, centery - (label.Size.Y.Offset / 2))
+		shadows[label].Position = label.Position + UDim2.fromOffset(1, 1)
+	end
+	
+	local function refreshSize()
+		if ClockType.Value == 'Digital' then
+			holder.Size = UDim2.fromOffset(140 + (ShowDate.Enabled and 48 or 0) + (TwentyFourHour.Enabled and 0 or 24), 64)
+			return
+		end
+	
+		holder.Size = UDim2.fromOffset(140, 130)
+	end
+	
+	local function update()
+		if vape.ThreadFix then
+			setthreadidentity(8)
+		end
+	
+		local now = os.date('*t')
+		local hour = TwentyFourHour.Enabled and now.hour or (now.hour > 12 and now.hour - 12 or (now.hour == 0 and 12 or now.hour))
+		local hourtext = string.format('%02d', hour)
+		local minutetext = string.format('%02d', now.min)
+		local meridiem = now.hour >= 12 and 'pm' or 'am'
+		local weekday = os.date('%a'):lower()
+		local datetext = string.format(ClockType.Value == 'Digital' and '%02d / %02d' or '%02d/%02d', americandate and now.month or now.day, americandate and now.day or now.month)
+	
+		if ClockType.Value == 'Digital' then
+			digitalhour.Text = hourtext
+			digitalminute.Text = minutetext
+			digitalmeridiem.Text = meridiem
+			digitaldate.Text = datetext
+			digitalweekday.Text = weekday
+			shadows[digitalhour].Text = hourtext
+			shadows[digitalminute].Text = minutetext
+			shadows[digitalmeridiem].Text = meridiem
+			shadows[digitaldate].Text = datetext
+			shadows[digitalweekday].Text = weekday
+			placeLabel(digitalmeridiem, 78 + getfontbounds(minutetext, 48 * uipallet.DisplayScale, uipallet.FontDisplay).X, 46)
+			placeLabel(digitaldate, holder.Size.X.Offset - 12, 24)
+			placeLabel(digitalweekday, holder.Size.X.Offset - 12, 40)
+	
+			return
+		end
+	
+		analoghour.Text = hourtext
+		analogminute.Text = minutetext
+		analogweekday.Text = weekday
+		analogdate.Text = datetext
+		analogmeridiem.Text = meridiem
+		shadows[analoghour].Text = hourtext
+		shadows[analogminute].Text = minutetext
+		shadows[analogweekday].Text = weekday
+		shadows[analogdate].Text = datetext
+		shadows[analogmeridiem].Text = meridiem
+		hand.Rotation = (hour * 30) + (now.min / 2)
+	end
 	
 	Clock = vape.Legit:CreateModule({
 		Name = 'Clock',
+		Category = 'HUD',
+		Icon = getvapeasset('catsixextra/assets/new/legit_clock.png'),
 		Function = function(callback)
 			if callback then
 				repeat
-					label.Text = DateTime.now():FormatLocalTime('LT', TwentyFourHour.Enabled and 'zh-cn' or 'en-us')
+					update()
 					task.wait(1)
 				until not Clock.Enabled
 			end
 		end,
-		Size = UDim2.fromOffset(100, 41),
-		Tooltip = 'Shows the current local time'
+		Size = UDim2.fromOffset(140, 130),
+		Tooltip = 'Draws a clock with the current real-world time'
 	})
-	Clock:CreateFont({
-		Name = 'Font',
-		Blacklist = 'Gotham',
-		Function = function(val)
-			label.FontFace = val
+	ClockType = Clock:CreateDropdown({
+		Name = 'Clock Type',
+		List = {'Analog', 'Digital'},
+		Function = function(value)
+			if holder then
+				analog.Visible = value == 'Analog'
+				digital.Visible = value == 'Digital'
+				ShowDate.Object.Visible = value == 'Digital'
+				refreshSize()
+				update()
+			end
 		end
 	})
-	Clock:CreateColorSlider({
-		Name = 'Color',
-		DefaultValue = 0,
-		DefaultOpacity = 0.5,
-		Function = function(hue, sat, val, opacity)
-			label.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
-			label.BackgroundTransparency = 1 - opacity
-		end
+	ShowDate = Clock:CreateToggle({
+		Name = 'Show date',
+		Function = function(callback)
+			if holder then
+				digitaldate.Visible = callback
+				digitalweekday.Visible = callback
+				shadows[digitaldate].Visible = callback and not Background.Enabled
+				shadows[digitalweekday].Visible = callback and not Background.Enabled
+				refreshSize()
+			end
+		end,
+		Default = true
 	})
 	TwentyFourHour = Clock:CreateToggle({
-		Name = '24 Hour Clock'
+		Name = '24 Hour Time',
+		Function = function(callback)
+			if holder then
+				analogmeridiem.Visible = not callback
+				digitalmeridiem.Visible = not callback
+				shadows[analogmeridiem].Visible = not callback and not Background.Enabled
+				shadows[digitalmeridiem].Visible = not callback and not Background.Enabled
+				refreshSize()
+				update()
+			end
+		end
 	})
-	label = Instance.new('TextLabel')
-	label.Size = UDim2.new(0, 100, 0, 41)
-	label.BackgroundTransparency = 0.5
-	label.TextSize = 15
-	label.Font = Enum.Font.Gotham
-	label.Text = '0:00 PM'
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.BackgroundColor3 = Color3.new()
-	label.Parent = Clock.Children
-	local corner = Instance.new('UICorner')
-	corner.CornerRadius = UDim.new(0, 4)
-	corner.Parent = label
+	Background = Clock:CreateToggle({
+		Name = 'Render background',
+		Function = function(callback)
+			if BackgroundColor then
+				holder.BackgroundTransparency = callback and 1 - BackgroundColor.Opacity or 1
+				BackgroundColor.Object.Visible = callback
+	
+				for i, v in shadows do
+					v.Visible = not callback and i.Visible
+				end
+			end
+		end,
+		Default = true
+	})
+	BackgroundColor = Clock:CreateColorSlider({
+		Name = 'Background Color',
+		DefaultHue = 0.8333,
+		DefaultSat = 0.0385,
+		DefaultValue = 0.102,
+		DefaultOpacity = 0.4,
+		Function = function(hue, sat, val, opacity)
+			if holder then
+				holder.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+				holder.BackgroundTransparency = Background.Enabled and 1 - opacity or 1
+			end
+		end,
+		Darker = true
+	})
+	holder = Clock.Children
+	holder.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+	holder.BackgroundTransparency = 0.6
+	local holdercorner = Instance.new('UICorner')
+	holdercorner.CornerRadius = UDim.new(0, 4)
+	holdercorner.Parent = holder
+	analog = Instance.new('Frame')
+	analog.BackgroundTransparency = 1
+	analog.Name = 'Analog'
+	analog.Size = UDim2.fromScale(1, 1)
+	analog.Parent = holder
+	digital = Instance.new('Frame')
+	digital.BackgroundTransparency = 1
+	digital.Name = 'Digital'
+	digital.Size = UDim2.fromScale(1, 1)
+	digital.Visible = false
+	digital.Parent = holder
+	for i = 0, 23 do
+		if not skippedticks[i] then
+			local angle = math.rad(i * 15) - (math.pi / 2)
+			addTick(math.cos(angle) * 50 + 68.5, math.sin(angle) * 50 + 65.5)
+		end
+	end
+	hand = Instance.new('Frame')
+	hand.AnchorPoint = Vector2.new(0.5, 1)
+	hand.BackgroundColor3 = Color3.fromRGB(6, 161, 126)
+	hand.BorderSizePixel = 0
+	hand.Name = 'Hand'
+	hand.Position = UDim2.fromOffset(70, 65)
+	hand.Size = UDim2.fromOffset(4, 52)
+	hand.Parent = analog
+	analoghour = addLabel(analog, 44 * uipallet.DisplayScale, Enum.TextXAlignment.Right)
+	analogminute = addLabel(analog, 44 * uipallet.DisplayScale, Enum.TextXAlignment.Right)
+	analogweekday = addLabel(analog, 13 * uipallet.DisplayScale, Enum.TextXAlignment.Left)
+	analogdate = addLabel(analog, 13 * uipallet.DisplayScale, Enum.TextXAlignment.Left)
+	analogmeridiem = addLabel(analog, 13 * uipallet.DisplayScale, Enum.TextXAlignment.Right)
+	digitalhour = addLabel(digital, 48 * uipallet.DisplayScale, Enum.TextXAlignment.Right)
+	digitalminute = addLabel(digital, 48 * uipallet.DisplayScale, Enum.TextXAlignment.Left)
+	digitalmeridiem = addLabel(digital, 16 * uipallet.DisplayScale, Enum.TextXAlignment.Left)
+	digitaldate = addLabel(digital, 16 * uipallet.DisplayScale, Enum.TextXAlignment.Right)
+	digitalweekday = addLabel(digital, 16 * uipallet.DisplayScale, Enum.TextXAlignment.Right)
+	local colon = Instance.new('Frame')
+	colon.AnchorPoint = Vector2.new(0.5, 0.5)
+	colon.BackgroundColor3 = Color3.new(1, 1, 1)
+	colon.BorderSizePixel = 0
+	colon.Name = 'Colon'
+	colon.Position = UDim2.fromOffset(70, 32)
+	colon.Size = UDim2.fromOffset(4, 4)
+	colon.Parent = digital
+	local coloncorner = Instance.new('UICorner')
+	coloncorner.CornerRadius = UDim.new(1, 0)
+	coloncorner.Parent = colon
+	placeLabel(analoghour, 56, 37.5)
+	placeLabel(analogminute, 130, 88.7)
+	placeLabel(analogweekday, 20, 90.5)
+	placeLabel(analogdate, 20, 106.5)
+	placeLabel(analogmeridiem, 130, 18.1)
+	placeLabel(digitalhour, 60, 34)
+	placeLabel(digitalminute, 78, 34)
+	ShowDate.Object.Visible = ClockType.Value == 'Digital'
+	update()
+	
+end)
+
+run(function()
+	local Compass
+	local Background
+	local BackgroundColor
+	local slots = {}
+	local cardinals = {[0] = 'N', [45] = 'NE', [90] = 'E', [135] = 'SE', [180] = 'S', [225] = 'SW', [270] = 'W', [315] = 'NW'}
+	local tickstep = (616 + 8) / 1400
+	local degreestep = tickstep * 10
+	local stripcentre = tickstep + 70 * degreestep
+	local majorsize = UDim2.fromOffset(2, 12)
+	local majorposition = UDim2.fromOffset(0, 32)
+	local minorsize = UDim2.fromOffset(2, 4)
+	local minorposition = UDim2.fromOffset(0, 36)
+	local platecolor = Color3.fromRGB(230, 230, 230)
+	local mutedcolor = Color3.fromRGB(163, 163, 163)
+	local whitecolor = Color3.new(1, 1, 1)
+	local holder, strip, headinglabel
+	
+	local function addTick()
+		local slot = Instance.new('Frame')
+		slot.BackgroundTransparency = 1
+		slot.Size = UDim2.new()
+		slot.Visible = false
+		slot.Parent = strip
+		local bar = Instance.new('Frame')
+		bar.AnchorPoint = Vector2.new(0.5, 0)
+		bar.BackgroundColor3 = whitecolor
+		bar.BorderSizePixel = 0
+		bar.Position = majorposition
+		bar.Size = majorsize
+		bar.Parent = slot
+		local label = Instance.new('TextLabel')
+		label.AnchorPoint = Vector2.new(0.5, 0)
+		label.BackgroundTransparency = 1
+		label.FontFace = uipallet.FontBold
+		label.Position = UDim2.fromOffset(0, 43)
+		label.Size = UDim2.fromOffset(60, 20)
+		label.TextColor3 = whitecolor
+		label.TextSize = 11
+		label.Parent = slot
+	
+		return {Object = slot, Bar = bar, Label = label}
+	end
+	
+	local function update()
+		if vape.ThreadFix then
+			setthreadidentity(8)
+		end
+	
+		local look = gameCamera.CFrame.LookVector
+		local heading = math.deg(math.atan2(look.X, -look.Z)) % 360
+		local plain = not Background.Enabled
+		local index = 0
+		headinglabel.Text = tostring(math.floor(heading))
+	
+		for value = math.ceil((heading - 70) / 5) * 5, heading + 70, 5 do
+			index += 1
+			local slot = slots[index]
+			local normalized = value % 360
+			local major = normalized % 45 == 0
+			slot.Object.Position = UDim2.fromOffset(tickstep + (value - heading + 70) * degreestep, 0)
+			slot.Object.Visible = true
+			slot.Bar.Position = major and majorposition or minorposition
+			slot.Bar.Size = major and majorsize or minorsize
+			slot.Bar.BackgroundTransparency = major and 0.6 or 0.624
+			slot.Label.Visible = major or normalized % 15 == 0
+	
+			if slot.Label.Visible then
+				slot.Label.Text = major and cardinals[normalized] or tostring(math.floor(normalized))
+				slot.Label.FontFace = (major or plain) and uipallet.FontBold or uipallet.Font
+				slot.Label.TextColor3 = plain and platecolor or (major and whitecolor or mutedcolor)
+			end
+		end
+	
+		for i, slot in slots do
+			if i > index then
+				slot.Object.Visible = false
+			end
+		end
+	end
+	
+	Compass = vape.Legit:CreateModule({
+		Name = 'Compass',
+		Category = 'HUD',
+		Icon = getvapeasset('catsixextra/assets/new/legit_compass.png'),
+		Function = function(callback)
+			if callback then
+				Compass:Clean(runService.RenderStepped:Connect(update))
+			end
+		end,
+		Size = UDim2.fromOffset(616, 60),
+		Tooltip = 'Shows a compass indicating your direction'
+	})
+	Background = Compass:CreateToggle({
+		Name = 'Render background',
+		Default = true,
+		Function = function(callback)
+			if BackgroundColor then
+				holder.BackgroundTransparency = callback and 1 - BackgroundColor.Opacity or 1
+				BackgroundColor.Object.Visible = callback
+			end
+		end
+	})
+	BackgroundColor = Compass:CreateColorSlider({
+		Name = 'Background Color',
+		DefaultHue = 0.8333,
+		DefaultSat = 0.0385,
+		DefaultValue = 0.102,
+		DefaultOpacity = 0.4,
+		Function = function(hue, sat, val, opacity)
+			if holder then
+				holder.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+				holder.BackgroundTransparency = Background.Enabled and 1 - opacity or 1
+			end
+		end,
+		Darker = true
+	})
+	holder = Compass.Children
+	holder.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+	holder.BackgroundTransparency = 0.6
+	local holdercorner = Instance.new('UICorner')
+	holdercorner.CornerRadius = UDim.new(0, 4)
+	holdercorner.Parent = holder
+	strip = Instance.new('Frame')
+	strip.BackgroundTransparency = 1
+	strip.ClipsDescendants = true
+	strip.Name = 'Strip'
+	strip.Position = UDim2.fromOffset(0, -20)
+	strip.Size = UDim2.fromOffset(616, 80)
+	strip.Parent = holder
+	headinglabel = Instance.new('TextLabel')
+	headinglabel.AnchorPoint = Vector2.new(0.5, 0)
+	headinglabel.BackgroundTransparency = 1
+	headinglabel.FontFace = uipallet.FontBold
+	headinglabel.Position = UDim2.fromOffset(stripcentre, 0)
+	headinglabel.Size = UDim2.fromOffset(200, 16)
+	headinglabel.TextColor3 = platecolor
+	headinglabel.TextSize = 12
+	headinglabel.Parent = strip
+	local arrow = Instance.new('ImageLabel')
+	arrow.AnchorPoint = Vector2.new(0.5, 0)
+	arrow.BackgroundTransparency = 1
+	arrow.Image = getvapeasset('catsixextra/assets/new/compassarrow.png')
+	arrow.Position = UDim2.fromOffset(stripcentre, 15)
+	arrow.Size = UDim2.fromOffset(19, 32)
+	arrow.Parent = strip
+	for index = 1, 29 do
+		slots[index] = addTick()
+	end
+end)
+
+run(function()
+	local Coords
+	local DisplayType
+	local Background
+	local BackgroundColor
+	local horizontalAxes = {}
+	local verticalAxes = {}
+	local coords = {}
+	local positives = {}
+	local positivecolor = Color3.fromRGB(5, 134, 105)
+	local negativecolor = Color3.fromRGB(250, 50, 56)
+	local trianglearrow = getvapeasset('catsixextra/assets/new/triangle.png')
+	local digitWidth = getfontbounds('0', 19, uipallet.Font).X
+	local holder, horizontal, vertical
+	local horizontalmaterial, verticalmaterial
+	
+	local function addLabel(parent, textsize, textcolor)
+		local label = Instance.new('TextLabel')
+		label.BackgroundTransparency = 1
+		label.FontFace = uipallet.Font
+		label.Size = UDim2.fromOffset(200, 20)
+		label.TextColor3 = textcolor
+		label.TextSize = textsize
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.Parent = parent
+	
+		return label
+	end
+	
+	local function addArrow(parent)
+		local box = Instance.new('Frame')
+		box.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+		box.BackgroundTransparency = 0.431
+		box.Size = UDim2.fromOffset(16, 16)
+		box.Parent = parent
+		local corner = Instance.new('UICorner')
+		corner.CornerRadius = UDim.new(0, 3)
+		corner.Parent = box
+		local triangle = Instance.new('ImageLabel')
+		triangle.BackgroundTransparency = 1
+		triangle.Image = trianglearrow
+		triangle.Size = UDim2.fromOffset(8, 4)
+		triangle.Parent = box
+	
+		return box, triangle
+	end
+	
+	local function addDivider(parent, size)
+		local divider = Instance.new('Frame')
+		divider.BackgroundColor3 = Color3.new(1, 1, 1)
+		divider.BackgroundTransparency = 0.8
+		divider.BorderSizePixel = 0
+		divider.Size = size
+		divider.Parent = parent
+	
+		return divider
+	end
+	
+	local function update()
+		if vape.ThreadFix then
+			setthreadidentity(8)
+		end
+	
+		if not entitylib.isAlive then return end
+	
+		local pos = entitylib.character.RootPart.Position
+		local look = gameCamera.CFrame.LookVector
+		local material = entitylib.character.Humanoid.FloorMaterial.Name
+		coords[1] = tostring(math.round(pos.X))
+		coords[2] = tostring(math.round(pos.Y))
+		coords[3] = tostring(math.round(pos.Z))
+		positives[1] = look.X > 0
+		positives[3] = look.Z > 0
+	
+		if DisplayType.Value == 'Vertical' then
+			for i, v in verticalAxes do
+				v.Value.Text = coords[i]
+	
+				if v.Triangle then
+					v.Triangle.ImageColor3 = positives[i] and positivecolor or negativecolor
+					v.Triangle.Position = UDim2.fromOffset(4, positives[i] and 5 or 6)
+					v.Triangle.Rotation = positives[i] and 180 or 0
+				end
+			end
+	
+			verticalmaterial.Text = material
+			return
+		end
+	
+		local offset = 20
+	
+		for i, v in horizontalAxes do
+			v.Label.Position = UDim2.fromOffset(offset, 16)
+			offset += v.Width + 5
+			v.Value.Text = coords[i]
+			v.Value.Position = UDim2.fromOffset(offset, 13)
+			offset += math.max(44, 10 + digitWidth * #coords[i])
+	
+			if v.Triangle then
+				v.Arrow.Position = UDim2.fromOffset(offset - 8, 18)
+				v.Triangle.ImageColor3 = positives[i] and positivecolor or negativecolor
+				v.Triangle.Position = UDim2.fromOffset(4, positives[i] and 5 or 6)
+				v.Triangle.Rotation = positives[i] and 180 or 0
+			end
+	
+			if v.Divider then
+				offset += v.Triangle and 20 or 0
+				v.Divider.Position = UDim2.fromOffset(offset - 1, 18)
+				offset += 20
+			end
+		end
+	
+		horizontalmaterial.Text = material
+		holder.Size = UDim2.fromOffset(offset + 24, 70)
+	end
+	
+	Coords = vape.Legit:CreateModule({
+		Name = 'Coords',
+		Category = 'HUD',
+		Icon = getvapeasset('catsixextra/assets/new/legit_coords.png'),
+		Function = function(callback)
+			if callback then
+				Coords:Clean(runService.RenderStepped:Connect(update))
+			end
+		end,
+		Size = UDim2.fromOffset(280, 70),
+		Tooltip = 'Shows your current XYZ coordinates'
+	})
+	DisplayType = Coords:CreateDropdown({
+		Name = 'Display Type',
+		List = {'Horizontal', 'Vertical'},
+		Function = function(value)
+			if holder then
+				horizontal.Visible = value == 'Horizontal'
+				vertical.Visible = value == 'Vertical'
+				holder.Size = UDim2.fromOffset(value == 'Vertical' and 140 or 280, value == 'Vertical' and 180 or 70)
+			end
+		end
+	})
+	Background = Coords:CreateToggle({
+		Name = 'Render background',
+		Default = true,
+		Function = function(callback)
+			if BackgroundColor then
+				holder.BackgroundTransparency = callback and 1 - BackgroundColor.Opacity or 1
+				BackgroundColor.Object.Visible = callback
+			end
+		end
+	})
+	BackgroundColor = Coords:CreateColorSlider({
+		Name = 'Background Color',
+		DefaultHue = 0.8333,
+		DefaultSat = 0.0385,
+		DefaultValue = 0.102,
+		DefaultOpacity = 0.4,
+		Function = function(hue, sat, val, opacity)
+			if holder then
+				holder.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
+				holder.BackgroundTransparency = Background.Enabled and 1 - opacity or 1
+			end
+		end,
+		Darker = true
+	})
+	holder = Coords.Children
+	holder.BackgroundColor3 = Color3.fromRGB(26, 25, 26)
+	holder.BackgroundTransparency = 0.6
+	local holdercorner = Instance.new('UICorner')
+	holdercorner.CornerRadius = UDim.new(0, 4)
+	holdercorner.Parent = holder
+	horizontal = Instance.new('Frame')
+	horizontal.BackgroundTransparency = 1
+	horizontal.Name = 'Horizontal'
+	horizontal.Size = UDim2.fromScale(1, 1)
+	horizontal.Parent = holder
+	vertical = Instance.new('Frame')
+	vertical.BackgroundTransparency = 1
+	vertical.Name = 'Vertical'
+	vertical.Size = UDim2.fromScale(1, 1)
+	vertical.Visible = false
+	vertical.Parent = holder
+	for i, axis in {'X', 'Y', 'Z'} do
+		local v = {Width = getfontbounds(axis, 12, uipallet.Font).X}
+		v.Label = addLabel(horizontal, 12, Color3.new(1, 1, 1))
+		v.Label.Text = axis
+		v.Value = addLabel(horizontal, 19, Color3.new(1, 1, 1))
+	
+		if axis ~= 'Y' then
+			v.Arrow, v.Triangle = addArrow(horizontal)
+		end
+	
+		if axis ~= 'Z' then
+			v.Divider = addDivider(horizontal, UDim2.fromOffset(2, 16))
+		end
+	
+		horizontalAxes[i] = v
+	end
+	for i, axis in {'X', 'Y', 'Z'} do
+		local v = {}
+		v.Label = addLabel(vertical, 11, Color3.new(1, 1, 1))
+		v.Label.Text = axis
+		v.Label.Position = UDim2.fromOffset(16, 16 + (i - 1) * 45)
+		v.Value = addLabel(vertical, 17, Color3.new(1, 1, 1))
+		v.Value.Position = UDim2.fromOffset(21 + getfontbounds(axis, 11, uipallet.Font).X, 13 + (i - 1) * 45)
+	
+		if axis ~= 'Y' then
+			v.Arrow, v.Triangle = addArrow(vertical)
+			v.Arrow.Position = UDim2.fromOffset(108, axis == 'X' and 18 or 105)
+		end
+	
+		verticalAxes[i] = v
+	end
+	for i = 1, 3 do
+		local divider = addDivider(vertical, UDim2.fromOffset(110, 2))
+		divider.Position = UDim2.fromOffset(16, 2 + i * 45)
+	end
+	local horizontallabel = addLabel(horizontal, 12, Color3.new(1, 1, 1))
+	horizontallabel.Text = 'MATERIAL:'
+	horizontallabel.Position = UDim2.fromOffset(20, 41)
+	horizontalmaterial = addLabel(horizontal, 12, Color3.fromRGB(255, 160, 84))
+	horizontalmaterial.Position = UDim2.fromOffset(20 + getfontbounds('MATERIAL: ', 12, uipallet.Font).X, 41)
+	local verticallabel = addLabel(vertical, 11, Color3.new(1, 1, 1))
+	verticallabel.Text = 'MATERIAL:'
+	verticallabel.Position = UDim2.fromOffset(16, 146)
+	verticalmaterial = addLabel(vertical, 11, Color3.fromRGB(255, 160, 84))
+	verticalmaterial.Position = UDim2.fromOffset(24 + getfontbounds('MATERIAL:', 11, uipallet.Font).X, 146)
 end)
 
 run(function()
@@ -7865,6 +8457,8 @@ run(function()
 	
 	Disguise = vape.Legit:CreateModule({
 		Name = 'Disguise',
+		Category = 'Game',
+		Icon = getvapeasset('catsixextra/assets/new/legit_disguise.png'),
 		Function = function(callback)
 			if callback then
 				Disguise:Clean(entitylib.Events.LocalAdded:Connect(localAdded))
@@ -7926,6 +8520,8 @@ run(function()
 	
 	FFlag = vape.Legit:CreateModule({
 		Name = 'FFlagEditor',
+		Category = 'Game',
+		Icon = getvapeasset('catsixextra/assets/new/legit_fflageditor.png'),
 		Function = function(call)
 			if call then
 				ChangeFFlag(true)
@@ -7949,6 +8545,8 @@ run(function()
 	
 	FOV = vape.Legit:CreateModule({
 		Name = 'FOV',
+		Category = 'Game',
+		Icon = getvapeasset('catsixextra/assets/new/legit_fov.png'),
 		Function = function(callback)
 			if callback then
 				oldfov = gameCamera.FieldOfView
@@ -7979,6 +8577,8 @@ run(function()
 	
 	FPS = vape.Legit:CreateModule({
 		Name = 'FPS',
+		Category = 'HUD',
+		Icon = getvapeasset('catsixextra/assets/new/legit_fps.png'),
 		Function = function(callback)
 			if callback then
 				local frames = {}
@@ -8022,7 +8622,7 @@ run(function()
 	label.Size = UDim2.fromScale(1, 1)
 	label.BackgroundTransparency = 0.5
 	label.TextSize = 15
-	label.Font = Enum.Font.Gotham
+	label.FontFace = uipallet.Font
 	label.Text = 'inf FPS'
 	label.TextColor3 = Color3.new(1, 1, 1)
 	label.BackgroundColor3 = Color3.new()
@@ -8034,123 +8634,343 @@ end)
 
 run(function()
 	local Keystrokes
-	local Style
-	local Color
-	local keys, holder = {}
+	local KeyStyle
+	local MouseStyle
+	local ShowSpacebar
+	local ShowCpsOnly
+	local keys = {}
+	local leftclicks = {}
+	local rightclicks = {}
+	local arrowicons = {
+		W = getvapeasset('catsixextra/assets/new/key_up.png'),
+		A = getvapeasset('catsixextra/assets/new/key_left.png'),
+		S = getvapeasset('catsixextra/assets/new/key_down.png'),
+		D = getvapeasset('catsixextra/assets/new/key_right.png')
+	}
+	local keybinds = {
+		[Enum.KeyCode.W] = 'W',
+		[Enum.KeyCode.A] = 'A',
+		[Enum.KeyCode.S] = 'S',
+		[Enum.KeyCode.D] = 'D',
+		[Enum.KeyCode.Space] = 'Space'
+	}
+	local releasedbackground = Color3.fromRGB(20, 20, 20)
+	local pressedtext = Color3.fromRGB(20, 20, 20)
+	local keytween = TweenInfo.new(0.05, Enum.EasingStyle.Linear)
+	local holder, mouseicons, cpsholder, cpsbackground, cpsdivider, cpsleft, cpsright, cpslabel
+	local lmbicon, rmbicon, mmbicon
 	
-	local function createKeystroke(keybutton, pos, pos2, text)
-		if keys[keybutton] then
-			keys[keybutton].Key:Destroy()
-			keys[keybutton] = nil
-		end
+	local function addLabel(parent, name, text)
+		local label = Instance.new('TextLabel')
+		label.BackgroundTransparency = 1
+		label.FontFace = uipallet.FontDisplay
+		label.Name = name
+		label.Size = UDim2.fromOffset(200, 22)
+		label.Text = text
+		label.TextColor3 = Color3.fromRGB(209, 209, 209)
+		label.TextSize = 16 * uipallet.DisplayScale
+		label.Parent = parent
 	
-		local key = Instance.new('Frame')
-		key.Size = keybutton == Enum.KeyCode.Space and UDim2.new(0, 110, 0, 24) or UDim2.new(0, 34, 0, 36)
-		key.BackgroundColor3 = Color3.fromHSV(Color.Hue, Color.Sat, Color.Value)
-		key.BackgroundTransparency = 1 - Color.Opacity
-		key.Position = pos
-		key.Name = keybutton.Name
-		key.Parent = holder
-		local keytext = Instance.new('TextLabel')
-		keytext.BackgroundTransparency = 1
-		keytext.Size = UDim2.fromScale(1, 1)
-		keytext.Font = Enum.Font.Gotham
-		keytext.Text = text or keybutton.Name
-		keytext.TextXAlignment = Enum.TextXAlignment.Left
-		keytext.TextYAlignment = Enum.TextYAlignment.Top
-		keytext.Position = pos2
-		keytext.TextSize = keybutton == Enum.KeyCode.Space and 18 or 15
-		keytext.TextColor3 = Color3.new(1, 1, 1)
-		keytext.Parent = key
-		local corner = Instance.new('UICorner')
-		corner.CornerRadius = UDim.new(0, 4)
-		corner.Parent = key
-	
-		keys[keybutton] = {Key = key}
+		return label
 	end
 	
-	local function updateKey(inputType)
-		local key = keys[inputType.KeyCode]
-		if key then
-			if key.Tween then
-				key.Tween:Cancel()
-			end
+	local function placeCps(label, x, centery, alignment)
+		label.Position = UDim2.fromOffset(alignment == Enum.TextXAlignment.Right and x - 200 or x, centery - 11)
+		label.TextXAlignment = alignment
+	end
 	
-			if key.Tween2 then
-				key.Tween2:Cancel()
-			end
+	local function addKey(name)
+		local key = Instance.new('Frame')
+		key.BackgroundColor3 = releasedbackground
+		key.BackgroundTransparency = 0.294
+		key.BorderSizePixel = 0
+		key.Name = name
+		key.Parent = holder
+		local corner = Instance.new('UICorner')
+		corner.CornerRadius = UDim.new(0, 5)
+		corner.Parent = key
+		local shadow = Instance.new('UIShadow')
+		shadow.BlurRadius = UDim.new(0, 6)
+		shadow.Color = Color3.new()
+		shadow.Enabled = false
+		shadow.Offset = UDim2.new()
+		shadow.Spread = UDim2.new()
+		shadow.Transparency = 0.404
+		shadow.Parent = key
+		local label = Instance.new('TextLabel')
+		label.BackgroundTransparency = 1
+		label.FontFace = uipallet.FontBold
+		label.Name = 'Label'
+		label.Size = UDim2.fromOffset(200, 20)
+		label.Text = name == 'Space' and '' or name
+		label.TextColor3 = Color3.new(1, 1, 1)
+		label.TextSize = 14
+		label.Parent = key
+		local icon = Instance.new('ImageLabel')
+		icon.BackgroundTransparency = 1
+		icon.Name = 'Icon'
+		icon.Size = UDim2.fromOffset(8.8, 8.8)
+		icon.Visible = false
+		icon.Parent = key
+		local bar = Instance.new('Frame')
+		bar.AnchorPoint = Vector2.new(0.5, 0)
+		bar.BackgroundColor3 = Color3.new(1, 1, 1)
+		bar.BorderSizePixel = 0
+		bar.Name = 'Bar'
+		bar.Position = UDim2.new(0.5, 0, 0, 4)
+		bar.Size = UDim2.fromOffset(60, 3)
+		bar.Visible = name == 'Space'
+		bar.Parent = key
+		keys[name] = {Object = key, Label = label, Icon = icon, Bar = bar, Shadow = shadow, Pressed = false}
 	
-			local pressed = inputType.UserInputState == Enum.UserInputState.Begin
-			key.Pressed = pressed
-			key.Tween = tweenService:Create(key.Key, TweenInfo.new(0.1), {
-				BackgroundColor3 = pressed and Color3.new(1, 1, 1) or Color3.fromHSV(Color.Hue, Color.Sat, Color.Value),
-				BackgroundTransparency = pressed and 0 or 1 - Color.Opacity
+		return keys[name]
+	end
+	
+	local function placeKey(entry, x, y, width, height)
+		entry.Object.Position = UDim2.fromOffset(x, y - 1)
+		entry.Object.Size = UDim2.fromOffset(width, height + 1)
+		entry.Label.Position = UDim2.fromOffset((width / 2) - 100, 5.75)
+		entry.Icon.Position = UDim2.fromOffset((width / 2) - 4.4, 6)
+	end
+	
+	local function pressKey(entry, pressed)
+		if entry.Pressed == pressed then return end
+	
+		entry.Pressed = pressed
+		entry.Shadow.Enabled = pressed
+	
+		tween:Tween(entry.Object, keytween, {
+			BackgroundColor3 = pressed and Color3.new(1, 1, 1) or releasedbackground,
+			BackgroundTransparency = pressed and 0 or 0.294
+		})
+	
+		tween:Tween(entry.Bar, keytween, {
+			BackgroundColor3 = pressed and pressedtext or Color3.new(1, 1, 1)
+		})
+	
+		tween:Tween(entry.Icon, keytween, {
+			ImageColor3 = pressed and pressedtext or Color3.new(1, 1, 1)
+		})
+	
+		tween:Tween(entry.Label, keytween, {
+			TextColor3 = pressed and pressedtext or Color3.new(1, 1, 1)
+		})
+	
+		if entry.Mouse then
+			tween:Tween(entry.Mouse, keytween, {
+				ImageColor3 = pressed and Color3.new(1, 1, 1) or releasedbackground,
+				ImageTransparency = pressed and 0 or 0.294
 			})
-			key.Tween2 = tweenService:Create(key.Key.TextLabel, TweenInfo.new(0.1), {
-				TextColor3 = pressed and Color3.new() or Color3.new(1, 1, 1)
-			})
-			key.Tween:Play()
-			key.Tween2:Play()
+		end
+	end
+	
+	local function countClicks(clicks)
+		local now = tick()
+	
+		while clicks[1] and clicks[1] < now do
+			table.remove(clicks, 1)
+		end
+	
+		return #clicks
+	end
+	
+	local function refreshLayout()
+		if not holder then return end
+	
+		local iconstyle = MouseStyle.Value == 'Icon'
+		local arrowstyle = KeyStyle.Value == 'Arrow'
+		local spacebar = ShowSpacebar.Enabled
+	
+		for i, v in keys do
+			v.Object.Visible = not ShowCpsOnly.Enabled and (i ~= 'Space' or spacebar) and not (iconstyle and (i == 'LMB' or i == 'RMB'))
+			v.Label.Visible = not arrowstyle or i == 'LMB' or i == 'RMB' or i == 'Space'
+			v.Icon.Visible = arrowstyle and arrowicons[i] ~= nil
+			v.Icon.Image = arrowicons[i] or ''
+		end
+	
+		mouseicons.Visible = iconstyle and not ShowCpsOnly.Enabled
+		cpsdivider.Visible = not ShowCpsOnly.Enabled
+		cpslabel.Visible = ShowCpsOnly.Enabled
+		cpsright.Visible = not ShowCpsOnly.Enabled
+	
+		if ShowCpsOnly.Enabled then
+			holder.Size = UDim2.fromOffset(150, 40)
+			cpsholder.Position = UDim2.fromOffset(0, 0)
+			cpsholder.Size = UDim2.fromOffset(110, 20)
+			cpsbackground.Position = UDim2.fromOffset(0, 0)
+			cpsbackground.Size = UDim2.fromOffset(39 + getfontbounds('CPS', 16 * uipallet.DisplayScale, uipallet.FontDisplay).X, 24)
+			placeCps(cpsleft, 22, 14, Enum.TextXAlignment.Right)
+			placeCps(cpslabel, 25, 14, Enum.TextXAlignment.Left)
+	
+			return
+		end
+	
+		local keysy = iconstyle and 8 or 4
+		local mousex = iconstyle and 122 or 0
+		local mousey = (iconstyle and keysy - 12 or keysy + 80) + (spacebar and 28 or 0)
+		local cpswidth = iconstyle and 80 or 110
+		holder.Size = UDim2.fromOffset(108 + (iconstyle and 96 or 0), (iconstyle and 80 or 144) + (spacebar and 28 or 0))
+		placeKey(keys.W, 38, keysy - 4, 34, 34)
+		placeKey(keys.A, 0, keysy + 38, 34, 34)
+		placeKey(keys.S, 38, keysy + 38, 34, 34)
+		placeKey(keys.D, 76, keysy + 38, 34, 34)
+		placeKey(keys.Space, 0, keysy + 79, 110.5, 22)
+		placeKey(keys.LMB, mousex, mousey, 52.7, 32)
+		placeKey(keys.RMB, mousex + 56.7, mousey, 52.7, 32)
+		mouseicons.Position = UDim2.fromOffset(mousex - 4, mousey)
+		cpsholder.Position = UDim2.fromOffset(mousex, mousey + (iconstyle and 44 or 34))
+		cpsholder.Size = UDim2.fromOffset(cpswidth, 20)
+		cpsbackground.Position = UDim2.fromOffset(0, 4)
+		cpsbackground.Size = UDim2.fromOffset(cpswidth, 24)
+		cpsdivider.Position = UDim2.fromOffset(cpswidth / 2, 8)
+		placeCps(cpsleft, 10, 16, Enum.TextXAlignment.Left)
+		placeCps(cpsright, cpswidth - 10, 16, Enum.TextXAlignment.Right)
+	end
+	
+	local function update()
+		if vape.ThreadFix then
+			setthreadidentity(8)
+		end
+	
+		cpsleft.Text = tostring(countClicks(leftclicks))
+		cpsright.Text = tostring(countClicks(rightclicks))
+	end
+	
+	local function inputChanged(input, pressed)
+		if vape.ThreadFix then
+			setthreadidentity(8)
+		end
+	
+		local name = keybinds[input.KeyCode]
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			name = 'LMB'
+	
+			if pressed then
+				table.insert(leftclicks, tick() + 1)
+			end
+		elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+			name = 'RMB'
+	
+			if pressed then
+				table.insert(rightclicks, tick() + 1)
+			end
+		end
+	
+		if name and keys[name] then
+			pressKey(keys[name], pressed)
 		end
 	end
 	
 	Keystrokes = vape.Legit:CreateModule({
 		Name = 'Keystrokes',
+		Category = 'HUD',
+		Icon = getvapeasset('catsixextra/assets/new/legit_keystrokes.png'),
 		Function = function(callback)
 			if callback then
-				createKeystroke(Enum.KeyCode.W, UDim2.new(0, 38, 0, 0), UDim2.new(0, 6, 0, 5), Style.Value == 'Arrow' and '^' or nil)
-				createKeystroke(Enum.KeyCode.S, UDim2.new(0, 38, 0, 42), UDim2.new(0, 8, 0, 5), Style.Value == 'Arrow' and 'v' or nil)
-				createKeystroke(Enum.KeyCode.A, UDim2.new(0, 0, 0, 42), UDim2.new(0, 7, 0, 5), Style.Value == 'Arrow' and '<' or nil)
-				createKeystroke(Enum.KeyCode.D, UDim2.new(0, 76, 0, 42), UDim2.new(0, 8, 0, 5), Style.Value == 'Arrow' and '>' or nil)
+				Keystrokes:Clean(inputService.InputBegan:Connect(function(input)
+					inputChanged(input, true)
+				end))
 	
-				Keystrokes:Clean(inputService.InputBegan:Connect(updateKey))
-				Keystrokes:Clean(inputService.InputEnded:Connect(updateKey))
+				Keystrokes:Clean(inputService.InputEnded:Connect(function(input)
+					inputChanged(input, false)
+				end))
+	
+				Keystrokes:Clean(runService.RenderStepped:Connect(update))
+			else
+				for _, v in keys do
+					pressKey(v, false)
+				end
 			end
 		end,
-		Size = UDim2.fromOffset(110, 176),
-		Tooltip = 'Shows movement keys onscreen'
+		Size = UDim2.fromOffset(108, 172),
+		Tooltip = 'Shows when your movement keys or mouse buttons are pressed, as well as mouse clicks per second'
 	})
-	holder = Instance.new('Frame')
-	holder.Size = UDim2.fromScale(1, 1)
-	holder.BackgroundTransparency = 1
-	holder.Parent = Keystrokes.Children
-	Style = Keystrokes:CreateDropdown({
+	KeyStyle = Keystrokes:CreateDropdown({
 		Name = 'Key Style',
 		List = {'Keyboard', 'Arrow'},
 		Function = function()
-			if Keystrokes.Enabled then
-				Keystrokes:Toggle()
-				Keystrokes:Toggle()
-			end
+			refreshLayout()
 		end
 	})
-	Color = Keystrokes:CreateColorSlider({
-		Name = 'Color',
-		DefaultValue = 0,
-		DefaultOpacity = 0.5,
-		Function = function(hue, sat, val, opacity)
-			for _, v in keys do
-				if not v.Pressed then
-					v.Key.BackgroundColor3 = Color3.fromHSV(hue, sat, val)
-					v.Key.BackgroundTransparency = 1 - opacity
-				end
-			end
+	MouseStyle = Keystrokes:CreateDropdown({
+		Name = 'Mouse Style',
+		List = {'Button', 'Icon'},
+		Function = function()
+			refreshLayout()
 		end
 	})
-	Keystrokes:CreateToggle({
+	ShowSpacebar = Keystrokes:CreateToggle({
 		Name = 'Show Spacebar',
-		Function = function(callback)
-			Keystrokes.Children.Size = UDim2.fromOffset(110, callback and 107 or 78)
-	
-			if callback then
-				createKeystroke(Enum.KeyCode.Space, UDim2.new(0, 0, 0, 83), UDim2.new(0, 25, 0, -10), '______')
-			else
-				keys[Enum.KeyCode.Space].Key:Destroy()
-				keys[Enum.KeyCode.Space] = nil
-			end
+		Function = function()
+			refreshLayout()
 		end,
 		Default = true
 	})
+	ShowCpsOnly = Keystrokes:CreateToggle({
+		Name = 'Show CPS Only',
+		Function = function()
+			refreshLayout()
+		end
+	})
+	holder = Keystrokes.Children
+	for _, v in {'W', 'A', 'S', 'D', 'Space', 'LMB', 'RMB'} do
+		addKey(v)
+	end
+	mouseicons = Instance.new('Frame')
+	mouseicons.BackgroundTransparency = 1
+	mouseicons.Name = 'MouseIcons'
+	mouseicons.Size = UDim2.fromOffset(96, 48)
+	mouseicons.Visible = false
+	mouseicons.Parent = holder
+	lmbicon = Instance.new('ImageLabel')
+	lmbicon.BackgroundTransparency = 1
+	lmbicon.Image = getvapeasset('catsixextra/assets/new/key_lmb.png')
+	lmbicon.ImageColor3 = releasedbackground
+	lmbicon.Name = 'LMB'
+	lmbicon.Size = UDim2.fromOffset(50.2, 48)
+	lmbicon.Parent = mouseicons
+	rmbicon = lmbicon:Clone()
+	rmbicon.Image = getvapeasset('catsixextra/assets/new/key_rmb.png')
+	rmbicon.Name = 'RMB'
+	rmbicon.Position = UDim2.fromOffset(40, 0)
+	rmbicon.Parent = mouseicons
+	mmbicon = Instance.new('ImageLabel')
+	mmbicon.BackgroundTransparency = 1
+	mmbicon.Image = getvapeasset('catsixextra/assets/new/key_mmb.png')
+	mmbicon.ImageColor3 = Color3.fromRGB(225, 225, 225)
+	mmbicon.Name = 'MMB'
+	mmbicon.Position = UDim2.fromOffset(43, 14)
+	mmbicon.Size = UDim2.fromOffset(3.9, 13.8)
+	mmbicon.Parent = mouseicons
+	cpsholder = Instance.new('Frame')
+	cpsholder.BackgroundTransparency = 1
+	cpsholder.Name = 'CPS'
+	cpsholder.Size = UDim2.fromOffset(110, 20)
+	cpsholder.Parent = holder
+	cpsbackground = Instance.new('Frame')
+	cpsbackground.BackgroundColor3 = releasedbackground
+	cpsbackground.BackgroundTransparency = 0.294
+	cpsbackground.BorderSizePixel = 0
+	cpsbackground.Name = 'Background'
+	cpsbackground.ZIndex = 0
+	cpsbackground.Parent = cpsholder
+	local cpscorner = Instance.new('UICorner')
+	cpscorner.CornerRadius = UDim.new(0, 5)
+	cpscorner.Parent = cpsbackground
+	cpsdivider = Instance.new('Frame')
+	cpsdivider.BackgroundColor3 = Color3.fromRGB(209, 209, 209)
+	cpsdivider.BorderSizePixel = 0
+	cpsdivider.Name = 'Divider'
+	cpsdivider.Size = UDim2.fromOffset(2, 18)
+	cpsdivider.Parent = cpsholder
+	cpsleft = addLabel(cpsholder, 'Left', '0')
+	cpsright = addLabel(cpsholder, 'Right', '0')
+	cpslabel = addLabel(cpsholder, 'Label', 'CPS')
+	cpslabel.Visible = false
+	keys.LMB.Mouse = lmbicon
+	keys.RMB.Mouse = rmbicon
+	refreshLayout()
+	
 end)
 
 run(function()
@@ -8159,6 +8979,8 @@ run(function()
 	
 	Memory = vape.Legit:CreateModule({
 		Name = 'Memory',
+		Category = 'HUD',
+		Icon = getvapeasset('catsixextra/assets/new/legit_memory.png'),
 		Function = function(callback)
 			if callback then
 				repeat
@@ -8190,7 +9012,7 @@ run(function()
 	label.Size = UDim2.new(0, 100, 0, 41)
 	label.BackgroundTransparency = 0.5
 	label.TextSize = 15
-	label.Font = Enum.Font.Gotham
+	label.FontFace = uipallet.Font
 	label.Text = '0 MB'
 	label.TextColor3 = Color3.new(1, 1, 1)
 	label.BackgroundColor3 = Color3.new()
@@ -8206,6 +9028,8 @@ run(function()
 	
 	Ping = vape.Legit:CreateModule({
 		Name = 'Ping',
+		Category = 'HUD',
+		Icon = getvapeasset('catsixextra/assets/new/legit_ping.png'),
 		Function = function(callback)
 			if callback then
 				repeat
@@ -8237,7 +9061,7 @@ run(function()
 	label.Size = UDim2.new(0, 100, 0, 41)
 	label.BackgroundTransparency = 0.5
 	label.TextSize = 15
-	label.Font = Enum.Font.Gotham
+	label.FontFace = uipallet.Font
 	label.Text = '0 ms'
 	label.TextColor3 = Color3.new(1, 1, 1)
 	label.BackgroundColor3 = Color3.new()
@@ -8299,6 +9123,8 @@ run(function()
 	
 	SongBeats = vape.Legit:CreateModule({
 		Name = 'Song Beats',
+		Category = 'Game',
+		Icon = getvapeasset('catsixextra/assets/new/legit_songbeats.png'),
 		Function = function(callback)
 			if callback then
 				songobj = Instance.new('Sound')
@@ -8387,6 +9213,8 @@ run(function()
 	
 	Speedmeter = vape.Legit:CreateModule({
 		Name = 'Speedmeter',
+		Category = 'HUD',
+		Icon = getvapeasset('catsixextra/assets/new/legit_speedmeter.png'),
 		Function = function(callback)
 			if callback then
 				repeat
@@ -8420,7 +9248,7 @@ run(function()
 	label.Size = UDim2.fromScale(1, 1)
 	label.BackgroundTransparency = 0.5
 	label.TextSize = 15
-	label.Font = Enum.Font.Gotham
+	label.FontFace = uipallet.Font
 	label.Text = '0 sps'
 	label.TextColor3 = Color3.new(1, 1, 1)
 	label.BackgroundColor3 = Color3.new()
@@ -8437,6 +9265,8 @@ run(function()
 	
 	TimeChanger = vape.Legit:CreateModule({
 		Name = 'Time Changer',
+		Category = 'Game',
+		Icon = getvapeasset('catsixextra/assets/new/legit_timechanger.png'),
 		Function = function(callback)
 			if callback then
 				old = lightingService.TimeOfDay

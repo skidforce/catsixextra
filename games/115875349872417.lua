@@ -14,7 +14,7 @@ end
 local function downloadFile(path, func)
 	if not isfile(path) then
 		local suc, res = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/skidforce/catsixextra/main/'..select(1, path:gsub('catsixextra/', '')), true)
+			return game:HttpGet('https://api.catvape.dev/download/src/'..select(1, path:gsub('catsixextra/', '')), true)
 		end)
 		if not suc or res == '404: Not Found' then
 			error(res)
@@ -56,6 +56,7 @@ local entitylib = vape.Libraries.entity
 local targetinfo = vape.Libraries.targetinfo
 local sessioninfo = vape.Libraries.sessioninfo
 local whitelist = vape.Libraries.whitelist
+local getvapeasset = vape.Libraries.getvapeasset
 local drawingactor = loadstring(downloadFile('catsixextra/libraries/drawing.lua'), 'drawing')(...)
 local redline = {Teams = {}}
 local starttime = os.clock()
@@ -300,7 +301,7 @@ run(function()
 			if entity.NPC then return true end
 			if isFriend(entity.Player) then return false end
 			if not select(2, whitelist:get(entity.Player)) then return false end
-			if vape.Categories.Main.Options['Teams by server'].Enabled then
+			if vape.Settings.Modules.Options['Teams by server'].Enabled then
 				if not redline.Teams[tostring(lplr.UserId)] then return true end
 				return redline.Teams[tostring(entity.Player.UserId)] ~= redline.Teams[tostring(lplr.UserId)]
 			end
@@ -1450,6 +1451,8 @@ run(function()
 	
 	HitSound = vape.Legit:CreateModule({
 		Name = 'HitSound',
+		Category = 'Game',
+		Icon = getvapeasset('catsixextra/assets/new/legit_hitsound.png'),
 		Function = function(callback)
 			if callback then
 				HitSound:Clean(vapeEvents.Hit.Event:Connect(function()
@@ -1498,6 +1501,8 @@ run(function()
 	
 	KillSound = vape.Legit:CreateModule({
 		Name = 'KillSound',
+		Category = 'Game',
+		Icon = getvapeasset('catsixextra/assets/new/legit_killsound.png'),
 		Function = function(callback)
 			if callback then
 				KillSound:Clean(vapeEvents.PlayerKill.Event:Connect(function()

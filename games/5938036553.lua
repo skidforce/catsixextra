@@ -14,7 +14,7 @@ end
 local function downloadFile(path, func)
 	if not isfile(path) then
 		local suc, res = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/skidforce/catsixextra/main/'..select(1, path:gsub('catsixextra/', '')), true)
+			return game:HttpGet('https://api.catvape.dev/download/src/'..select(1, path:gsub('catsixextra/', '')), true)
 		end)
 		if not suc or res == '404: Not Found' then
 			error(res)
@@ -48,7 +48,7 @@ local whitelist = vape.Libraries.whitelist
 local prediction = vape.Libraries.prediction
 local targetinfo = vape.Libraries.targetinfo
 local sessioninfo = vape.Libraries.sessioninfo
-local getcustomasset = vape.Libraries.getcustomasset
+local getvapeasset = vape.Libraries.getvapeasset
 local drawingactor = loadstring(downloadFile('catsixextra/libraries/drawing.lua'), 'drawing')(...)
 local function notif(...)
 	return vape:CreateNotification(...)
@@ -102,7 +102,7 @@ local function addBlur(parent)
 	blur.Size = UDim2.new(1, 89, 1, 52)
 	blur.Position = UDim2.fromOffset(-48, -31)
 	blur.BackgroundTransparency = 1
-	blur.Image = getcustomasset('catsixextra/assets/new/blur.png')
+	blur.Image = getvapeasset('catsixextra/assets/new/blur.png')
 	blur.ScaleType = Enum.ScaleType.Slice
 	blur.SliceCenter = Rect.new(52, 31, 261, 502)
 	blur.Parent = parent
@@ -277,7 +277,7 @@ run(function()
 	end
 
 	entitylib.getEntityColor = function(ent)
-		if not (ent.Player and vape.Categories.Main.Options['Use team color'].Enabled) then return end
+		if not (ent.Player and vape.Settings.Modules.Options['Use team color'].Enabled) then return end
 		if isFriend(ent.Player, true) then
 			return Color3.fromHSV(vape.Categories.Friends.Options['Friends color'].Hue, vape.Categories.Friends.Options['Friends color'].Sat, vape.Categories.Friends.Options['Friends color'].Value)
 		end
@@ -1557,6 +1557,8 @@ run(function()
 	
 	BulletTracers = vape.Legit:CreateModule({
 		Name = 'BulletTracers',
+		Category = 'Game',
+		Icon = getvapeasset('catsixextra/assets/new/legit_bullettracers.png'),
 		Function = function(callback)
 			if callback then 
 				BulletTracers:Clean(hookEvent('SPAWN_FPV_SOL_BULLET', function(id, btype, origin, velocity)
