@@ -687,6 +687,12 @@ mainapi.Libraries = {
 	color = color,
 	getcustomasset = getcustomasset,
 	getfontsize = getfontsize,
+	getfontbounds = function(text, size, font, width)
+		fontsize.Width = width or math.huge
+		local bounds = getfontsize(text, size, font)
+		fontsize.Width = math.huge
+		return bounds
+	end,
 	getvapeasset = getcustomasset,
 	makeDraggable = makeDraggable,
 	tween = tween,
