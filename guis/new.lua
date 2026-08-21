@@ -19,6 +19,7 @@ local mainapi = {
 	RainbowTable = {},
 	SaveCache = {},
 	Scale = {Value = 1},
+	Settings = {},
 	ThreadFix = setthreadidentity and true or false,
 	ToggleNotifications = {},
 	Version = '6',
@@ -686,6 +687,7 @@ mainapi.Libraries = {
 	color = color,
 	getcustomasset = getcustomasset,
 	getfontsize = getfontsize,
+	getvapeasset = getcustomasset,
 	makeDraggable = makeDraggable,
 	tween = tween,
 	uipallet = uipallet,
@@ -3264,7 +3266,7 @@ function mainapi:CreateGUI()
 	end
 
 	function categoryapi:CreateSettingsPane(categorysettings)
-		local optionapi = {}
+		local optionapi = {Options = {}}
 
 		local button = Instance.new('TextButton')
 		button.Name = categorysettings.Name
@@ -3335,7 +3337,9 @@ function mainapi:CreateGUI()
 
 		for i, v in components do
 			optionapi['Create'..i] = function(_, settings)
-				return v(settings, settingschildren, categoryapi)
+				local component = v(settings, settingschildren, categoryapi)
+				optionapi.Options[settings.Name] = component
+				return component
 			end
 		end
 
@@ -3373,6 +3377,8 @@ function mainapi:CreateGUI()
 				end
 			end
 		end)
+
+		mainapi.Settings[categorysettings.Name] = optionapi
 
 		return optionapi
 	end
